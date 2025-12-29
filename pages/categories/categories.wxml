@@ -1,0 +1,120 @@
+<!--categories.wxml-->
+<view class="container">
+  <view class="page-content">
+    <view class="header">
+      <text class="title">分类管理</text>
+    </view>
+
+    <view class="category-tabs">
+      <view class="tab-item {{activeTab === 'income' ? 'active' : ''}}" bindtap="switchTab" data-tab="income">
+        <text class="tab-text">收入分类</text>
+      </view>
+      <view class="tab-item {{activeTab === 'expense' ? 'active' : ''}}" bindtap="switchTab" data-tab="expense">
+        <text class="tab-text">支出分类</text>
+      </view>
+    </view>
+
+    <view class="category-list">
+      <block wx:for="{{currentCategories}}" wx:key="id">
+        <view class="category-item">
+          <view class="category-info">
+            <view class="category-name-wrapper" bindtap="toggleSubcategories" data-id="{{item.id}}">
+              <text class="category-icon">{{item.icon}}</text>
+              <text class="category-name">{{item.name}}</text>
+              <text class="subcategory-toggle">{{item.subcategories.length > 0 ? (item.expanded ? '▼' : '▶') : ''}}</text>
+            </view>
+          </view>
+          <view class="category-actions">
+            <view class="action-btn edit" bindtap="editCategory" data-id="{{item.id}}">
+              <text class="action-text">编辑</text>
+            </view>
+            <view class="action-btn delete" bindtap="deleteCategory" data-id="{{item.id}}">
+              <text class="action-text">删除</text>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 子分类列表 -->
+        <view class="subcategory-list" wx:if="{{item.expanded}}">
+          <!-- 显示子分类 -->
+          <block wx:if="{{item.subcategories.length > 0}}">
+            <block wx:for="{{item.subcategories}}" wx:for-item="subcat" wx:key="id">
+              <view class="subcategory-item">
+                <text class="category-icon">{{subcat.icon}}</text>
+                <text class="subcategory-name">{{subcat.name}}</text>
+                <view class="subcategory-actions">
+                  <view class="action-btn edit" bindtap="editSubcategory" data-category-id="{{item.id}}" data-subcategory-id="{{subcat.id}}">
+                    <text class="action-text">编辑</text>
+                  </view>
+                  <view class="action-btn delete" bindtap="deleteSubcategory" data-category-id="{{item.id}}" data-subcategory-id="{{subcat.id}}">
+                    <text class="action-text">删除</text>
+                  </view>
+                </view>
+              </view>
+            </block>
+          </block>
+          
+          <!-- 显示空状态 -->
+          <view wx:else class="empty-subcategories">
+            <text class="empty-text">暂无子分类</text>
+          </view>
+          
+          <!-- 添加子分类按钮（始终显示） -->
+          <view class="add-subcategory" bindtap="showAddSubcategoryDialog" data-category-id="{{item.id}}">
+            <text class="add-subcategory-text">+ 添加子分类</text>
+          </view>
+        </view>
+      </block>
+    </view>
+
+    <!-- 添加子分类对话框 -->
+    <view class="dialog-overlay" wx:if="{{showAddSubDialog}}">
+      <view class="dialog-content">
+        <text class="dialog-title">添加子分类</text>
+        <input class="dialog-input" placeholder="请输入子分类名称" bindinput="onNewSubcategoryInput" value="{{newSubcategoryName}}" adjust-position="true" />
+        <view class="dialog-buttons">
+          <view class="dialog-btn cancel" bindtap="hideAddSubcategoryDialog">
+            <text class="dialog-btn-text">取消</text>
+          </view>
+          <view class="dialog-btn confirm" bindtap="addSubcategory">
+            <text class="dialog-btn-text">确定</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 编辑分类对话框 -->
+    <view class="dialog-overlay" wx:if="{{showEditDialog}}">
+      <view class="dialog-content edit-dialog">
+        <text class="dialog-title">{{editType === 'category' ? '编辑分类' : '编辑子分类'}}</text>
+        <input class="dialog-input" placeholder="请输入名称" bindinput="onEditNameInput" value="{{editName}}" adjust-position="true" />
+        <view class="dialog-section">
+          <text class="section-label">选择图标</text>
+          <view class="icon-grid">
+            <block wx:for="{{availableIcons}}" wx:key="index">
+              <view class="icon-item {{selectedIcon === item ? 'selected' : ''}}" bindtap="selectIcon" data-icon="{{item}}">
+                <text class="icon">{{item}}</text>
+              </view>
+            </block>
+          </view>
+        </view>
+        <view class="dialog-buttons">
+          <view class="dialog-btn cancel" bindtap="hideEditDialog">
+            <text class="dialog-btn-text">取消</text>
+          </view>
+          <view class="dialog-btn confirm" bindtap="saveEdit">
+            <text class="dialog-btn-text">保存</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="add-section">
+      <view class="input-item">
+        <text class="label">新分类名称</text>
+        <input class="input" placeholder="请输入分类名称" bindinput="onNewCategoryInput" value="{{newCategoryName}}" adjust-position="true" />
+      </view>
+      <view class="btn" bindtap="addCategory">添加分类</view>
+    </view>
+  </view>
+</view>

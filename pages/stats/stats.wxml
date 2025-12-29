@@ -1,0 +1,42 @@
+<!--stats.wxml-->
+<view class="container">
+  <view class="page-content">
+    <view class="header">
+      <text class="title">收支统计</text>
+      <text class="date">{{currentMonth}}</text>
+    </view>
+
+    <view class="stats-summary">
+      <view class="summary-item income">
+        <text class="summary-label">本月收入</text>
+        <text class="summary-amount">¥{{totalIncome || 0}}</text>
+      </view>
+      <view class="summary-item expense">
+        <text class="summary-label">本月支出</text>
+        <text class="summary-amount">¥{{totalExpense || 0}}</text>
+      </view>
+      <view class="summary-item balance">
+        <text class="summary-label">本月结余</text>
+        <text class="summary-amount">¥{{balance || 0}}</text>
+      </view>
+    </view>
+
+    <view class="chart-section">
+      <text class="section-title">分类统计</text>
+      <view class="chart-tabs">
+        <view class="tab-item {{chartType === 'category' ? 'active' : ''}}" bindtap="switchChartType" data-type="category">
+          <text class="tab-text">大类</text>
+        </view>
+        <view class="tab-item {{chartType === 'subcategory' ? 'active' : ''}}" bindtap="switchChartType" data-type="subcategory">
+          <text class="tab-text">小类</text>
+        </view>
+      </view>
+      <canvas id="categoryChart" canvas-id="categoryChart" class="chart"></canvas>
+    </view>
+
+    <view class="chart-section">
+      <text class="section-title">日统计</text>
+      <canvas id="dailyChart" canvas-id="dailyChart" class="chart"></canvas>
+    </view>
+  </view>
+</view>

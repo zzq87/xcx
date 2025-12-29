@@ -1,0 +1,74 @@
+<!--index.wxml-->
+<view class="container">
+  <scroll-view class="page-content" scroll-y="true" bindfocus="onInputFocus">
+    <view class="header">
+      <text class="title">今日记账</text>
+      <text class="date">{{currentDate}}</text>
+    </view>
+
+    <view class="input-section" id="inputSection">
+      <view class="input-item">
+        <text class="label">金额</text>
+        <input class="input" type="digit" placeholder="请输入金额" bindinput="onAmountInput" value="{{amount}}" focus="{{focusAmount}}" adjust-position="true" />
+      </view>
+
+      <view class="input-item">
+        <text class="label">类型</text>
+        <picker class="select" mode="selector" range="{{types}}" bindchange="onTypeChange" value="{{typeIndex}}">
+          <view class="picker-text">{{types[typeIndex]}}</view>
+        </picker>
+      </view>
+
+      <view class="input-item">
+        <text class="label">分类</text>
+        <view class="category-grid">
+          <block wx:for="{{categoryData}}" wx:key="id">
+            <view class="category-item {{selectedCategoryId === item.id ? 'selected' : ''}}" bindtap="selectCategory" data-index="{{index}}" data-id="{{item.id}}">
+              <text class="category-icon">{{item.icon}}</text>
+              <text class="category-name">{{item.name}}</text>
+            </view>
+          </block>
+        </view>
+      </view>
+
+      <view class="input-item" wx:if="{{subcategories.length > 0}}">
+        <text class="label">子分类</text>
+        <view class="category-grid subcategory-grid">
+          <block wx:for="{{categoryData[categoryIndex].subcategories}}" wx:key="id">
+            <view class="category-item {{selectedSubcategoryId === item.id ? 'selected' : ''}}" bindtap="selectSubcategory" data-index="{{index}}" data-id="{{item.id}}">
+              <text class="category-icon">{{item.icon}}</text>
+              <text class="category-name">{{item.name}}</text>
+            </view>
+          </block>
+        </view>
+      </view>
+
+      <view class="input-item">
+        <text class="label">备注</text>
+        <input class="input" placeholder="请输入备注" bindinput="onNoteInput" value="{{note}}" adjust-position="true" />
+      </view>
+
+      <view class="btn" bindtap="addRecord">添加记录</view>
+    </view>
+
+    <view class="records-section">
+      <text class="section-title">今日记录</text>
+      <view class="records-list">
+        <block wx:for="{{todayRecords}}" wx:key="index">
+          <view class="record-item">
+            <view class="record-info">
+              <text class="record-category">{{item.category}}</text>
+              <text class="record-note">{{item.note}}</text>
+            </view>
+            <text class="record-amount {{item.type === '支出' ? 'expense' : 'income'}}">
+              {{item.type === '支出' ? '-' : '+'}}{{item.amount}}
+            </text>
+          </view>
+        </block>
+        <view wx:if="{{todayRecords.length === 0}}" class="no-records">
+          <text>今日暂无记录</text>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+</view>
