@@ -1,0 +1,210 @@
+<!-- accounts.wxml -->
+<view class="container">
+  <view class="page-content">
+    <view class="header">
+      <text class="title">账户管理</text>
+      <view class="header-actions">
+        <view class="action-btn" bindtap="showAddAccountDialog">
+          <text class="action-text">添加账户</text>
+        </view>
+        <view class="action-btn primary" bindtap="showTransferDialog">
+          <text class="action-text">转账</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="account-tabs">
+      <view class="tab-item {{activeTab === 'deposit' ? 'active' : ''}}" bindtap="switchTab" data-tab="deposit">
+        <text class="tab-text">存款账户</text>
+      </view>
+      <view class="tab-item {{activeTab === 'liability' ? 'active' : ''}}" bindtap="switchTab" data-tab="liability">
+        <text class="tab-text">负债账户</text>
+      </view>
+    </view>
+
+    <view class="total-balance">
+      <text class="total-balance-label">总余额</text>
+      <text class="total-balance-amount {{totalBalance < 0 ? 'negative' : ''}}">¥{{totalBalance}}</text>
+    </view>
+
+    <view class="account-list">
+      <block wx:for="{{currentAccounts}}" wx:key="id">
+        <view class="account-item">
+          <view class="account-info">
+            <text class="account-icon">{{item.icon}}</text>
+            <text class="account-name">{{item.name}}</text>
+          </view>
+          <view class="account-actions">
+        <view class="account-balance {{item.balance < 0 ? 'negative' : ''}}">
+          ¥{{item.balance}}
+        </view>
+        <view class="edit-btn" bindtap="showEditAccountDialog" data-id="{{item.id}}">
+          <text class="edit-btn-text">编辑</text>
+        </view>
+        <view class="delete-btn" bindtap="showDeleteConfirmDialog" data-id="{{item.id}}">
+          <text class="delete-btn-text">删除</text>
+        </view>
+      </view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 转账对话框 -->
+  <view class="dialog-overlay" wx:if="{{showTransferDialog}}">
+    <view class="dialog-content">
+      <text class="dialog-title">转账</text>
+      
+      <view class="dialog-section">
+        <text class="section-label">转出账户</text>
+        <view class="account-select">
+          <block wx:for="{{allAccounts}}" wx:key="id">
+            <view class="account-option {{transferForm.fromAccountId == item.id ? 'selected' : ''}}" bindtap="selectFromAccount" data-id="{{item.id}}">
+              <text class="option-icon">{{item.icon}}</text>
+              <text class="option-name">{{item.name}}</text>
+              <text class="option-balance">¥{{item.balance.toFixed(2)}}</text>
+            </view>
+          </block>
+        </view>
+      </view>
+      
+      <view class="dialog-section">
+        <text class="section-label">转入账户</text>
+        <view class="account-select">
+          <block wx:for="{{allAccounts}}" wx:key="id">
+            <view class="account-option {{transferForm.toAccountId == item.id ? 'selected' : ''}}" bindtap="selectToAccount" data-id="{{item.id}}">
+              <text class="option-icon">{{item.icon}}</text>
+              <text class="option-name">{{item.name}}</text>
+              <text class="option-balance">¥{{item.balance.toFixed(2)}}</text>
+            </view>
+          </block>
+        </view>
+      </view>
+      
+      <view class="dialog-section">
+        <text class="section-label">金额</text>
+        <input class="dialog-input" type="digit" placeholder="请输入金额" bindinput="onTransferInput" data-field="amount" value="{{transferForm.amount}}" adjust-position="true" />
+      </view>
+      
+      <view class="dialog-section">
+        <text class="section-label">备注</text>
+        <input class="dialog-input" placeholder="请输入备注" bindinput="onTransferInput" data-field="note" value="{{transferForm.note}}" adjust-position="true" />
+      </view>
+      
+      <view class="dialog-buttons">
+        <view class="dialog-btn cancel" bindtap="hideTransferDialog">
+          <text class="dialog-btn-text">取消</text>
+        </view>
+        <view class="dialog-btn confirm" bindtap="executeTransfer">
+          <text class="dialog-btn-text">确认转账</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 添加账户对话框 -->
+  <view class="dialog-overlay" wx:if="{{showAddAccountDialog}}">
+    <view class="dialog-content">
+      <text class="dialog-title">添加账户</text>
+      
+      <view class="dialog-section">
+        <text class="section-label">账户名称</text>
+        <input class="dialog-input" placeholder="请输入账户名称" bindinput="onNewAccountInput" data-field="name" value="{{newAccount.name}}" adjust-position="true" />
+      </view>
+      
+      <view class="dialog-section">
+        <text class="section-label">初始余额</text>
+        <input class="dialog-input" type="digit" placeholder="请输入初始余额" bindinput="onNewAccountInput" data-field="balance" value="{{newAccount.balance}}" adjust-position="true" />
+      </view>
+      
+      <view class="dialog-section">
+        <text class="section-label">账户类型</text>
+        <view class="account-type-select">
+          <view class="type-option {{newAccount.type === 'deposit' ? 'selected' : ''}}" bindtap="setAccountType" data-type="deposit">
+            <text class="type-text">存款账户</text>
+          </view>
+          <view class="type-option {{newAccount.type === 'liability' ? 'selected' : ''}}" bindtap="setAccountType" data-type="liability">
+            <text class="type-text">负债账户</text>
+          </view>
+        </view>
+      </view>
+      
+      <view class="dialog-section">
+        <text class="section-label">账户图标</text>
+        <view class="icon-selector">
+          <block wx:for="{{presetIcons}}" wx:key="*this">
+            <view class="icon-option {{newAccount.icon === item ? 'selected' : ''}}" bindtap="selectIcon" data-icon="{{item}}" data-for="new">
+              <text class="icon-option-text">{{item}}</text>
+            </view>
+          </block>
+        </view>
+      </view>
+      
+      <view class="dialog-buttons">
+        <view class="dialog-btn cancel" bindtap="hideAddAccountDialog">
+          <text class="dialog-btn-text">取消</text>
+        </view>
+        <view class="dialog-btn confirm" bindtap="addAccount">
+          <text class="dialog-btn-text">添加</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 编辑账户对话框 -->
+  <view class="dialog-overlay" wx:if="{{showEditAccountDialog}}">
+    <view class="dialog-content">
+      <text class="dialog-title">编辑账户</text>
+      
+      <view class="dialog-section">
+        <text class="section-label">账户名称</text>
+        <input class="dialog-input" placeholder="请输入账户名称" bindinput="onEditAccountInput" data-field="name" value="{{editAccount.name}}" adjust-position="true" />
+      </view>
+      
+      <view class="dialog-section">
+        <text class="section-label">当前余额</text>
+        <input class="dialog-input" type="digit" placeholder="请输入当前余额" bindinput="onEditAccountInput" data-field="balance" value="{{editAccount.balance}}" adjust-position="true" />
+      </view>
+      
+      <view class="dialog-section">
+        <text class="section-label">账户图标</text>
+        <view class="icon-selector">
+          <block wx:for="{{presetIcons}}" wx:key="*this">
+            <view class="icon-option {{editAccount.icon === item ? 'selected' : ''}}" bindtap="selectIcon" data-icon="{{item}}" data-for="edit">
+              <text class="icon-option-text">{{item}}</text>
+            </view>
+          </block>
+        </view>
+      </view>
+      
+      <view class="dialog-buttons">
+        <view class="dialog-btn cancel" bindtap="hideEditAccountDialog">
+          <text class="dialog-btn-text">取消</text>
+        </view>
+        <view class="dialog-btn confirm" bindtap="saveEditAccount">
+          <text class="dialog-btn-text">保存</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 删除确认对话框 -->
+  <view class="dialog-overlay" wx:if="{{showDeleteConfirmDialog}}">
+    <view class="dialog-content">
+      <text class="dialog-title">确认删除</text>
+      
+      <view class="dialog-section">
+        <text class="section-label">确定要删除该账户吗？此操作不可恢复。</text>
+      </view>
+      
+      <view class="dialog-buttons">
+        <view class="dialog-btn cancel" bindtap="hideDeleteConfirmDialog">
+          <text class="dialog-btn-text">取消</text>
+        </view>
+        <view class="dialog-btn confirm danger" bindtap="deleteAccount">
+          <text class="dialog-btn-text">删除</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

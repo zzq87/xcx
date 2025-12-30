@@ -13,10 +13,36 @@
       </view>
 
       <view class="input-item">
+        <text class="label">日期</text>
+        <picker class="select" mode="date" start="2020-01-01" end="2100-12-31" bindchange="onDateChange" value="{{currentDate}}">
+          <view class="picker-text">{{currentDate}}</view>
+        </picker>
+      </view>
+
+      <view class="input-item">
+        <text class="label">时间</text>
+        <picker class="select" mode="time" bindchange="onTimeChange" value="{{currentTime}}">
+          <view class="picker-text">{{currentTime}}</view>
+        </picker>
+      </view>
+
+      <view class="input-item">
         <text class="label">类型</text>
         <picker class="select" mode="selector" range="{{types}}" bindchange="onTypeChange" value="{{typeIndex}}">
           <view class="picker-text">{{types[typeIndex]}}</view>
         </picker>
+      </view>
+
+      <view class="input-item">
+        <text class="label">账户</text>
+        <view class="category-grid">
+          <block wx:for="{{allAccounts}}" wx:key="id">
+            <view class="category-item {{selectedAccountId == item.id ? 'selected' : ''}}" bindtap="selectAccount" data-id="{{item.id}}">
+              <text class="category-icon">{{item.icon}}</text>
+              <text class="category-name">{{item.name}}</text>
+            </view>
+          </block>
+        </view>
       </view>
 
       <view class="input-item">
@@ -55,10 +81,14 @@
       <text class="section-title">今日记录</text>
       <view class="records-list">
         <block wx:for="{{todayRecords}}" wx:key="index">
-          <view class="record-item">
+          <view class="record-item" bindtap="showEditRecordDialog" data-record="{{item}}">
             <view class="record-info">
               <text class="record-category">{{item.category}}</text>
               <text class="record-note">{{item.note}}</text>
+              <text class="record-meta">
+                <text class="record-time">{{item.time}}</text>
+                <text class="record-account">{{item.accountIcon}} {{item.accountName}}</text>
+              </text>
             </view>
             <text class="record-amount {{item.type === '支出' ? 'expense' : 'income'}}">
               {{item.type === '支出' ? '-' : '+'}}{{item.amount}}
@@ -71,4 +101,73 @@
       </view>
     </view>
   </scroll-view>
+
+  <!-- 编辑记录对话框 -->
+  <view class="dialog-overlay" wx:if="{{showEditRecordDialog}}">
+    <view class="dialog-content">
+      <text class="dialog-title">编辑记录</text>
+      
+      <view class="input-item">
+        <text class="label">金额</text>
+        <input class="input" type="digit" placeholder="请输入金额" bindinput="onEditAmountInput" value="{{editRecord.amount}}" adjust-position="true" />
+      </view>
+      
+      <view class="input-item">
+        <text class="label">类型</text>
+        <picker class="select" mode="selector" range="{{types}}" bindchange="onEditTypeChange" value="{{types.indexOf(editRecord.type)}}">
+          <view class="picker-text">{{editRecord.type}}</view>
+        </picker>
+      </view>
+      
+      <view class="input-item">
+        <text class="label">账户</text>
+        <view class="category-grid">
+          <block wx:for="{{allAccounts}}" wx:key="id">
+            <view class="category-item {{editRecord.accountId == item.id ? 'selected' : ''}}" bindtap="onEditAccountChange" data-id="{{item.id}}">
+              <text class="category-icon">{{item.icon}}</text>
+              <text class="category-name">{{item.name}}</text>
+            </view>
+          </block>
+        </view>
+      </view>
+      
+      <view class="input-item">
+        <text class="label">分类</text>
+        <view class="category-grid">
+          <block wx:for="{{categoryData}}" wx:key="id">
+            <view class="category-item {{editRecord.selectedCategoryId === item.id ? 'selected' : ''}}" bindtap="onEditCategoryChange" data-index="{{index}}">
+              <text class="category-icon">{{item.icon}}</text>
+              <text class="category-name">{{item.name}}</text>
+            </view>
+          </block>
+        </view>
+      </view>
+      
+      <view class="input-item" wx:if="{{subcategories.length > 0}}">
+        <text class="label">子分类</text>
+        <view class="category-grid subcategory-grid">
+          <block wx:for="{{categoryData[0].subcategories}}" wx:key="id">
+            <view class="category-item {{editRecord.selectedSubcategoryId === item.id ? 'selected' : ''}}" bindtap="onEditSubcategoryChange" data-index="{{index}}">
+              <text class="category-icon">{{item.icon}}</text>
+              <text class="category-name">{{item.name}}</text>
+            </view>
+          </block>
+        </view>
+      </view>
+      
+      <view class="input-item">
+        <text class="label">备注</text>
+        <input class="input" placeholder="请输入备注" bindinput="onEditNoteInput" value="{{editRecord.note}}" adjust-position="true" />
+      </view>
+      
+      <view class="dialog-buttons">
+        <view class="dialog-btn cancel" bindtap="hideEditRecordDialog">
+          <text class="dialog-btn-text">取消</text>
+        </view>
+        <view class="dialog-btn confirm" bindtap="saveEditRecord">
+          <text class="dialog-btn-text">保存</text>
+        </view>
+      </view>
+    </view>
+  </view>
 </view>

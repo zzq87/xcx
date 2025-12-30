@@ -3,6 +3,7 @@
     "pages/index/index",
     "pages/stats/stats",
     "pages/categories/categories",
+    "pages/accounts/accounts",
     "pages/logs/logs"
   ],
   "window": {
@@ -27,6 +28,10 @@
       {
         "pagePath": "pages/categories/categories",
         "text": "分类管理"
+      },
+      {
+        "pagePath": "pages/accounts/accounts",
+        "text": "账户管理"
       }
     ]
   },

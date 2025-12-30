@@ -1,0 +1,428 @@
+/* accounts.wxss */
+.container {
+  padding: 20rpx;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #eee;
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.header-actions {
+  display: flex;
+  gap: 20rpx;
+}
+
+.action-btn {
+  padding: 12rpx 24rpx;
+  border-radius: 8rpx;
+  background-color: #f5f5f5;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn.primary {
+  background-color: #07c160;
+  color: white;
+}
+
+.action-text {
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+.action-btn.primary .action-text {
+  color: white;
+}
+
+.account-tabs {
+  display: flex;
+  background-color: white;
+  border-radius: 12rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+  margin-bottom: 30rpx;
+  overflow: hidden;
+}
+
+.total-balance {
+  background-color: white;
+  border-radius: 12rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.total-balance-label {
+  font-size: 32rpx;
+  color: #666;
+  font-weight: 500;
+}
+
+.total-balance-amount {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #07c160;
+}
+
+.total-balance-amount.negative {
+  color: #ff4d4f;
+}
+
+.tab-item {
+  flex: 1;
+  padding: 24rpx;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.tab-item.active {
+  background-color: #07c160;
+}
+
+.tab-item.active .tab-text {
+  color: white;
+  font-weight: bold;
+}
+
+.tab-text {
+  font-size: 32rpx;
+  color: #666;
+  transition: all 0.3s;
+}
+
+.account-list {
+  flex: 1;
+  background-color: white;
+  border-radius: 12rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+  padding: 20rpx;
+}
+
+.account-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  transition: background-color 0.2s;
+}
+
+.account-item:last-child {
+  border-bottom: none;
+}
+
+.account-item:active {
+  background-color: #f5f5f5;
+}
+
+.account-info {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.account-icon {
+  font-size: 48rpx;
+}
+
+.account-name {
+  font-size: 32rpx;
+  color: #333;
+}
+
+.account-balance {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #07c160;
+}
+
+.account-balance.negative {
+  color: #ff4d4f;
+}
+
+.account-actions {
+  display: flex;
+  align-items: center;
+  gap: 30rpx;
+}
+
+.edit-btn {
+  padding: 10rpx 20rpx;
+  background-color: #f5f5f5;
+  border-radius: 8rpx;
+  white-space: nowrap;
+}
+
+.edit-btn-text {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.delete-btn {
+  padding: 10rpx 20rpx;
+  background-color: #fff1f0;
+  border-radius: 8rpx;
+  white-space: nowrap;
+}
+
+.delete-btn-text {
+  font-size: 24rpx;
+  color: #ff4d4f;
+}
+
+/* 对话框样式 */
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40rpx 0;
+  z-index: 1000;
+}
+
+.dialog-content {
+  background-color: white;
+  border-radius: 12rpx;
+  padding: 32rpx;
+  width: 85%;
+  max-width: 650rpx;
+  max-height: 90vh;
+  overflow-y: auto;
+  margin-top: 10vh;
+}
+
+.dialog-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 32rpx;
+  text-align: center;
+  display: block;
+}
+
+.dialog-section {
+  margin-bottom: 32rpx;
+}
+
+.section-label {
+  display: block;
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 16rpx;
+}
+
+.dialog-input {
+  width: 100%;
+  padding: 0 20rpx;
+  border: 1rpx solid #eee;
+  border-radius: 8rpx;
+  font-size: 30rpx;
+  box-sizing: border-box;
+  margin-bottom: 0;
+  height: 68rpx;
+  line-height: 68rpx;
+  vertical-align: middle;
+}
+
+.account-select {
+  background-color: #f5f5f5;
+  border-radius: 8rpx;
+  padding: 16rpx;
+  max-height: 600rpx;
+  overflow-y: auto;
+  min-height: 300rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.account-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx 10rpx;
+  background-color: white;
+  border-radius: 8rpx;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2rpx solid transparent;
+  height: auto;
+  min-height: 100rpx;
+  width: calc(25% - 12rpx);
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.account-option:last-child {
+  margin-bottom: 0;
+}
+
+.account-option:active {
+  transform: scale(0.98);
+}
+
+.account-option.selected {
+  border-color: #1890ff;
+  background-color: #e6f7ff;
+}
+
+.option-icon {
+  font-size: 36rpx;
+  margin-bottom: 8rpx;
+}
+
+.option-name {
+  font-size: 24rpx;
+  color: #333;
+  margin-bottom: 6rpx;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.option-balance {
+  font-size: 22rpx;
+  color: #666;
+  font-weight: 500;
+}
+
+.account-type-select {
+  display: flex;
+  gap: 20rpx;
+}
+
+.type-option {
+  flex: 1;
+  padding: 20rpx;
+  background-color: #f5f5f5;
+  border-radius: 8rpx;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.type-option.selected {
+  background-color: #e6f7ff;
+  border: 2rpx solid #1890ff;
+}
+
+.type-text {
+  font-size: 30rpx;
+  color: #666;
+}
+
+.type-option.selected .type-text {
+  color: #1890ff;
+  font-weight: bold;
+}
+
+.dialog-buttons {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 40rpx;
+}
+
+.dialog-btn {
+  flex: 1;
+  padding: 20rpx;
+  border-radius: 8rpx;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dialog-btn.cancel {
+  background-color: #f5f5f5;
+}
+
+.dialog-btn.confirm {
+  background-color: #07c160;
+  color: white;
+}
+
+.dialog-btn-text {
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.dialog-btn.cancel .dialog-btn-text {
+  color: #666;
+}
+
+.dialog-btn.confirm .dialog-btn-text {
+  color: white;
+}
+
+.dialog-btn.confirm.danger {
+  background-color: #ff4d4f;
+}
+
+/* 图标选择器样式 */
+.icon-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  background-color: #f5f5f5;
+  border-radius: 8rpx;
+  padding: 16rpx;
+  max-height: 300rpx;
+  overflow-y: auto;
+}
+
+.icon-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80rpx;
+  height: 80rpx;
+  background-color: white;
+  border-radius: 8rpx;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2rpx solid transparent;
+}
+
+.icon-option:active {
+  transform: scale(0.95);
+}
+
+.icon-option.selected {
+  border-color: #1890ff;
+  background-color: #e6f7ff;
+}
+
+.icon-option-text {
+  font-size: 40rpx;
+}
