@@ -47,6 +47,7 @@
       <view class="input-item">
         <text class="label">账户</text>
         <view class="category-grid">
+          <!-- 所有账户放在一起显示 -->
           <block wx:for="{{allAccounts}}" wx:key="id">
             <view class="category-item {{selectedAccountId == item.id ? 'selected' : ''}}" bindtap="selectAccount" data-id="{{item.id}}">
               <text class="category-icon">{{item.icon}}</text>

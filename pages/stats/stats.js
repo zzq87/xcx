@@ -12,17 +12,13 @@ Page({
     dailyStats: {},
     chartType: 'category', // category 或 subcategory
     // 日期选择器相关
-    showDatePickerModal: false
+    showDatePickerModal: false,
+    hideCharts: false // 控制图表显示/隐藏
   },
 
   onLoad() {
     this.initCurrentMonth();
     this.initDatePickerData();
-    this.loadStatsData();
-  },
-  
-  onLoad() {
-    this.initCurrentMonth();
     this.loadStatsData();
   },
   
@@ -58,14 +54,16 @@ Page({
   // 显示日期选择器
   showDatePicker() {
     this.setData({
-      showDatePickerModal: true
+      showDatePickerModal: true,
+      hideCharts: true // 隐藏图表
     });
   },
   
   // 隐藏日期选择器
   hideDatePicker() {
     this.setData({
-      showDatePickerModal: false
+      showDatePickerModal: false,
+      hideCharts: false // 显示图表
     });
   },
   

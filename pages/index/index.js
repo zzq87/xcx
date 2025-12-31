@@ -150,46 +150,126 @@ Page({
   loadAccounts() {
     let accounts = wx.getStorageSync('accounts');
     
+    // 定义新的账户分类结构
+    const accountCategories = {
+      '现金账户': ['现金'],
+      '虚拟账户': ['支付宝','微信钱包'],
+      '储蓄账户': ['银行卡'],
+      '投资账户': ['基金账户','股票账户'],
+      '债权账户': ['应收款项','借给他人'],
+      '信用账户': ['信用卡','蚂蚁花呗'],
+      '负债账户': ['借用他人','应付款项']
+    };
+    
     // 如果没有账户数据，初始化默认账户
     if (!accounts) {
-      accounts = {
-        deposit: [
-          { id: 1, name: '现金', balance: 0, icon: '💵' },
-          { id: 2, name: '银行卡', balance: 0, icon: '💳' },
-          { id: 3, name: '支付宝', balance: 0, icon: '🐜' },
-          { id: 4, name: '微信', balance: 0, icon: '💬' },
-          { id: 8, name: '借给他人', balance: 0, icon: '👤' }
-        ],
-        liability: [
-          { id: 5, name: '信用卡', balance: 0, icon: '💳' },
-          { id: 6, name: '花呗', balance: 0, icon: '🌸' },
-          { id: 7, name: '银行贷款', balance: 0, icon: '🏦' },
-          { id: 9, name: '借用他人', balance: 0, icon: '🤝' }
-        ]
-      };
+      // 默认账户数据
+      const defaultAccounts = [
+        { id: 1, name: '现金', balance: 0, icon: '💵', category: '现金账户' },
+        { id: 2, name: '银行卡', balance: 0, icon: '💳', category: '储蓄账户' },
+        { id: 3, name: '支付宝', balance: 0, icon: '🐜', category: '虚拟账户' },
+        { id: 4, name: '微信钱包', balance: 0, icon: '💬', category: '虚拟账户' },
+        { id: 5, name: '信用卡', balance: 0, icon: '💳', category: '信用账户' },
+        { id: 6, name: '蚂蚁花呗', balance: 0, icon: '🌸', category: '信用账户' },
+        { id: 7, name: '借给他人', balance: 0, icon: '👤', category: '债权账户' },
+        { id: 8, name: '借用他人', balance: 0, icon: '🤝', category: '负债账户' },
+        { id: 9, name: '基金账户', balance: 0, icon: '📈', category: '投资账户' },
+        { id: 10, name: '股票账户', balance: 0, icon: '📊', category: '投资账户' },
+        { id: 11, name: '应收款项', balance: 0, icon: '📝', category: '债权账户' },
+        { id: 12, name: '应付款项', balance: 0, icon: '📋', category: '负债账户' }
+      ];
+      
+      accounts = { accounts: defaultAccounts };
       wx.setStorageSync('accounts', accounts);
     }
     
-    // 确保账户类型正确（修复借给他人应为存款账户的问题）
-    accounts = this.ensureAccountTypes(accounts);
+    // 确保账户数据结构正确
+    if (accounts.deposit || accounts.liability) {
+      // 旧数据结构，转换为新结构
+      const allAccounts = [];
+      let id = 1;
+      
+      // 将旧数据转换为新结构
+      if (accounts.deposit) {
+        accounts.deposit.forEach(account => {
+          // 确定账户分类
+          let category = '现金账户';
+          if (account.name === '银行卡') {
+            category = '储蓄账户';
+          } else if (account.name === '支付宝' || account.name === '微信') {
+            category = '虚拟账户';
+          } else if (account.name === '借给他人') {
+            category = '债权账户';
+          }
+          
+          allAccounts.push({
+            id: id++,
+            name: account.name === '微信' ? '微信钱包' : account.name,
+            balance: parseFloat(account.balance) || 0,
+            icon: account.icon || '💵',
+            category: category
+          });
+        });
+      }
+      
+      if (accounts.liability) {
+        accounts.liability.forEach(account => {
+          // 确定账户分类
+          let category = '负债账户';
+          if (account.name === '信用卡' || account.name === '花呗') {
+            category = '信用账户';
+          } else if (account.name === '借用他人') {
+            category = '负债账户';
+          }
+          
+          allAccounts.push({
+            id: id++,
+            name: account.name === '花呗' ? '蚂蚁花呗' : account.name,
+            balance: parseFloat(account.balance) || 0,
+            icon: account.icon || '💳',
+            category: category
+          });
+        });
+      }
+      
+      // 添加缺少的默认账户
+      const existingAccountNames = allAccounts.map(acc => acc.name);
+      const defaultAccounts = [
+        { id: id++, name: '基金账户', balance: 0, icon: '📈', category: '投资账户' },
+        { id: id++, name: '股票账户', balance: 0, icon: '📊', category: '投资账户' },
+        { id: id++, name: '应收款项', balance: 0, icon: '📝', category: '债权账户' },
+        { id: id++, name: '应付款项', balance: 0, icon: '📋', category: '负债账户' }
+      ];
+      
+      defaultAccounts.forEach(acc => {
+        if (!existingAccountNames.includes(acc.name)) {
+          allAccounts.push(acc);
+        }
+      });
+      
+      accounts = { accounts: allAccounts };
+      wx.setStorageSync('accounts', accounts);
+    }
     
-    // 确保所有账户余额都是数字类型
-    Object.keys(accounts).forEach(type => {
-      accounts[type] = accounts[type].map(account => ({
-        ...account,
-        balance: parseFloat(account.balance) || 0
-      }));
+    // 确保所有账户都有category字段
+    const allAccounts = accounts.accounts.map(account => ({
+      ...account,
+      balance: parseFloat(account.balance) || 0,
+      icon: account.icon || '💵'
+    }));
+    
+    // 按分类组织账户
+    const categorizedAccounts = {};
+    // 将账户分类键转换为数组，确保显示顺序正确
+    const accountCategoryList = Object.keys(accountCategories);
+    accountCategoryList.forEach(category => {
+      categorizedAccounts[category] = allAccounts.filter(acc => acc.category === category);
     });
-    
-    // 合并所有账户到一个数组
-    const allAccounts = [...accounts.deposit, ...accounts.liability];
-    
-    // 构建包含图标和名称的账户数组
-    const accountsWithIcons = allAccounts.map(account => `${account.icon} ${account.name}`);
     
     this.setData({
       allAccounts,
-      accounts: accountsWithIcons
+      categorizedAccounts,
+      accountCategories: accountCategoryList
     });
   },
   
@@ -360,6 +440,8 @@ Page({
         note: '',
         selectedAccountId: null
       });
+      // 重新加载分类数据，确保与当前类型一致
+      this.loadCategories();
 
       wx.showToast({
         title: '添加成功',

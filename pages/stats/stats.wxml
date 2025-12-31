@@ -26,7 +26,7 @@
       </view>
     </view>
 
-    <view class="chart-section">
+    <view class="chart-section" wx:if="{{!hideCharts}}">
       <text class="section-title">分类统计</text>
       <view class="chart-tabs">
         <view class="tab-item {{chartType === 'category' ? 'active' : ''}}" bindtap="switchChartType" data-type="category">
@@ -39,7 +39,7 @@
       <canvas id="categoryChart" type="2d" class="chart"></canvas>
     </view>
 
-    <view class="chart-section">
+    <view class="chart-section" wx:if="{{!hideCharts}}">
       <text class="section-title">日统计</text>
       <canvas id="dailyChart" type="2d" class="chart"></canvas>
     </view>

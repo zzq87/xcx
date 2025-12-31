@@ -243,7 +243,57 @@
   margin-top: 10rpx;
 }
 
-.category-item {
+/* 账户列表样式 */
+.account-list {
+  margin-top: 10rpx;
+  background-color: white;
+  border-radius: 12rpx;
+  padding: 16rpx;
+}
+
+/* 账户分类样式 */
+.account-category {
+  margin-bottom: 20rpx;
+}
+
+.account-category:last-child {
+  margin-bottom: 0;
+}
+
+.account-category-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 12rpx;
+  display: block;
+}
+
+.account-category-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+/* 账户列表的分类项样式 */
+.account-list .category-item {
+  width: 100%;
+  min-height: auto;
+  padding: 16rpx 20rpx;
+  background-color: #f5f5f5;
+  border-radius: 12rpx;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  overflow: hidden;
+  margin-bottom: 8rpx;
+}
+
+/* 分类网格的分类项样式 */
+.category-grid .category-item {
   width: calc(20% - 16rpx);
   min-height: 100rpx;
   padding: 16rpx 0;
@@ -258,6 +308,7 @@
   justify-content: center;
   box-sizing: border-box;
   overflow: hidden;
+  margin-bottom: 0;
 }
 
 .category-item:active {
