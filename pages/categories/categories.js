@@ -477,7 +477,8 @@ Page({
     this.setData({
       selectedCategoryId: categoryId,
       showAddSubDialog: true,
-      newSubcategoryName: ''
+      newSubcategoryName: '',
+      selectedIcon: '📌' // 默认图标
     });
   },
 
@@ -486,7 +487,8 @@ Page({
     this.setData({
       showAddSubDialog: false,
       selectedCategoryId: null,
-      newSubcategoryName: ''
+      newSubcategoryName: '',
+      selectedIcon: ''
     });
   },
 
@@ -499,7 +501,7 @@ Page({
 
   // 添加子分类
   addSubcategory() {
-    const { newSubcategoryName, selectedCategoryId, activeTab, categories } = this.data;
+    const { newSubcategoryName, selectedCategoryId, activeTab, categories, selectedIcon } = this.data;
     
     if (!newSubcategoryName.trim()) {
       wx.showToast({
@@ -541,7 +543,7 @@ Page({
     const newSubcategory = {
       id: maxId + 1,
       name: newSubcategoryName.trim(),
-      icon: getCategoryIcon(newSubcategoryName.trim(), 'subcategory')
+      icon: selectedIcon || getCategoryIcon(newSubcategoryName.trim(), 'subcategory')
     };
     
     // 更新子分类数据
@@ -553,7 +555,8 @@ Page({
       currentCategories: categories[activeTab],
       showAddSubDialog: false,
       newSubcategoryName: '',
-      selectedCategoryId: null
+      selectedCategoryId: null,
+      selectedIcon: ''
     });
     
     // 保存到本地存储

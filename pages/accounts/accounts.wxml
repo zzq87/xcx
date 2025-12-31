@@ -31,20 +31,57 @@
       <block wx:for="{{currentAccounts}}" wx:key="id">
         <view class="account-item">
           <view class="account-info">
-            <text class="account-icon">{{item.icon}}</text>
-            <text class="account-name">{{item.name}}</text>
+            <view class="account-name-wrapper" bindtap="toggleSubaccounts" data-id="{{item.id}}">
+              <text class="account-icon">{{item.icon}}</text>
+              <text class="account-name">{{item.name}}</text>
+              <text class="subaccount-toggle">{{item.subAccounts && item.subAccounts.length > 0 ? (item.expanded ? '▼' : '▶') : ''}}</text>
+            </view>
           </view>
           <view class="account-actions">
-        <view class="account-balance {{item.balance < 0 ? 'negative' : ''}}">
-          ¥{{item.balance}}
+            <view class="account-balance {{(item.subAccounts && item.subAccounts.length > 0 ? item.subAccountsTotalBalance : item.balance) < 0 ? 'negative' : ''}}">
+              ¥{{item.subAccounts && item.subAccounts.length > 0 ? item.subAccountsTotalBalance : item.balance}}
+            </view>
+            <view class="edit-btn" bindtap="showEditAccountDialog" data-id="{{item.id}}">
+              <text class="edit-btn-text">编辑</text>
+            </view>
+            <view class="delete-btn" bindtap="showDeleteConfirmDialog" data-id="{{item.id}}">
+              <text class="delete-btn-text">删除</text>
+            </view>
+          </view>
         </view>
-        <view class="edit-btn" bindtap="showEditAccountDialog" data-id="{{item.id}}">
-          <text class="edit-btn-text">编辑</text>
-        </view>
-        <view class="delete-btn" bindtap="showDeleteConfirmDialog" data-id="{{item.id}}">
-          <text class="delete-btn-text">删除</text>
-        </view>
-      </view>
+        
+        <!-- 子账户列表 -->
+        <view class="subaccount-list" wx:if="{{item.expanded}}">
+          <!-- 显示子账户 -->
+          <block wx:if="{{item.subAccounts && item.subAccounts.length > 0}}">
+            <block wx:for="{{item.subAccounts}}" wx:for-item="subacc" wx:key="id">
+              <view class="subaccount-item">
+                <text class="subaccount-icon">{{'  ' + subacc.icon}}</text>
+                <text class="subaccount-name">{{subacc.name}}</text>
+                <view class="subaccount-actions">
+                  <view class="subaccount-balance {{subacc.balance < 0 ? 'negative' : ''}}">
+                    ¥{{subacc.balance}}
+                  </view>
+                  <view class="edit-btn" bindtap="showEditSubAccountDialog" data-accountid="{{subacc.parentId}}" data-subid="{{subacc.id}}" data-type="{{subacc.parentType}}">
+                    <text class="edit-btn-text">编辑</text>
+                  </view>
+                  <view class="delete-btn" bindtap="showDeleteSubAccountConfirmDialog" data-accountid="{{subacc.parentId}}" data-subid="{{subacc.id}}" data-type="{{subacc.parentType}}">
+                    <text class="delete-btn-text">删除</text>
+                  </view>
+                </view>
+              </view>
+            </block>
+          </block>
+          
+          <!-- 显示空状态 -->
+          <view wx:else class="empty-subaccounts">
+            <text class="empty-text">暂无子账户</text>
+          </view>
+          
+          <!-- 添加子账户按钮（始终显示） -->
+          <view class="add-subaccount-btn" bindtap="showAddSubAccountDialog" data-id="{{item.id}}" data-type="{{activeTab}}">
+            <text class="add-subaccount-btn-text">+ 添加子账户</text>
+          </view>
         </view>
       </block>
     </view>
@@ -202,6 +239,100 @@
           <text class="dialog-btn-text">取消</text>
         </view>
         <view class="dialog-btn confirm danger" bindtap="deleteAccount">
+          <text class="dialog-btn-text">删除</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 添加子账户对话框 -->
+  <view class="dialog-overlay" wx:if="{{showAddSubAccountDialog}}">
+    <view class="dialog-content">
+      <text class="dialog-title">添加子账户</text>
+      
+      <view class="dialog-section">
+        <text class="section-label">子账户名称</text>
+        <input class="dialog-input" placeholder="请输入子账户名称" bindinput="onNewSubAccountInput" data-field="name" value="{{newSubAccount.name}}" adjust-position="true" />
+      </view>
+      
+      <view class="dialog-section">
+        <text class="section-label">初始余额</text>
+        <input class="dialog-input" type="digit" placeholder="请输入初始余额" bindinput="onNewSubAccountInput" data-field="balance" value="{{newSubAccount.balance}}" adjust-position="true" />
+      </view>
+      
+      <view class="dialog-section">
+        <text class="section-label">账户图标</text>
+        <view class="icon-selector">
+          <block wx:for="{{presetIcons}}" wx:key="*this">
+            <view class="icon-option {{newSubAccount.icon === item ? 'selected' : ''}}" bindtap="selectIcon" data-icon="{{item}}" data-for="newSub">
+              <text class="icon-option-text">{{item}}</text>
+            </view>
+          </block>
+        </view>
+      </view>
+      
+      <view class="dialog-buttons">
+        <view class="dialog-btn cancel" bindtap="hideAddSubAccountDialog">
+          <text class="dialog-btn-text">取消</text>
+        </view>
+        <view class="dialog-btn confirm" bindtap="addSubAccount">
+          <text class="dialog-btn-text">添加</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 编辑子账户对话框 -->
+  <view class="dialog-overlay" wx:if="{{showEditSubAccountDialog}}">
+    <view class="dialog-content">
+      <text class="dialog-title">编辑子账户</text>
+      
+      <view class="dialog-section">
+        <text class="section-label">子账户名称</text>
+        <input class="dialog-input" placeholder="请输入子账户名称" bindinput="onEditSubAccountInput" data-field="name" value="{{editSubAccount.name}}" adjust-position="true" />
+      </view>
+      
+      <view class="dialog-section">
+        <text class="section-label">当前余额</text>
+        <input class="dialog-input" type="digit" placeholder="请输入当前余额" bindinput="onEditSubAccountInput" data-field="balance" value="{{editSubAccount.balance}}" adjust-position="true" />
+      </view>
+      
+      <view class="dialog-section">
+        <text class="section-label">账户图标</text>
+        <view class="icon-selector">
+          <block wx:for="{{presetIcons}}" wx:key="*this">
+            <view class="icon-option {{editSubAccount.icon === item ? 'selected' : ''}}" bindtap="selectIcon" data-icon="{{item}}" data-for="editSub">
+              <text class="icon-option-text">{{item}}</text>
+            </view>
+          </block>
+        </view>
+      </view>
+      
+      <view class="dialog-buttons">
+        <view class="dialog-btn cancel" bindtap="hideEditSubAccountDialog">
+          <text class="dialog-btn-text">取消</text>
+        </view>
+        <view class="dialog-btn confirm" bindtap="saveEditSubAccount">
+          <text class="dialog-btn-text">保存</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 删除子账户确认对话框 -->
+  <view class="dialog-overlay" wx:if="{{showDeleteSubAccountConfirmDialog}}">
+    <view class="dialog-content">
+      <text class="dialog-title">确认删除</text>
+      
+      <view class="dialog-section">
+        <text class="section-label">确定要删除该子账户吗？此操作不可恢复。</text>
+      </view>
+      
+      <view class="dialog-buttons">
+        <view class="dialog-btn cancel" bindtap="hideDeleteSubAccountConfirmDialog">
+          <text class="dialog-btn-text">取消</text>
+        </view>
+        <view class="dialog-btn confirm danger" bindtap="deleteSubAccount">
           <text class="dialog-btn-text">删除</text>
         </view>
       </view>

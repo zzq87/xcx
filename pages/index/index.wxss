@@ -244,8 +244,9 @@
 }
 
 .category-item {
-  width: calc(25% - 12rpx);
-  padding: 20rpx 0;
+  width: calc(20% - 16rpx);
+  min-height: 100rpx;
+  padding: 16rpx 0;
   background-color: #f5f5f5;
   border-radius: 12rpx;
   text-align: center;
@@ -255,6 +256,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .category-item:active {
@@ -267,21 +270,26 @@
 }
 
 .category-item .category-icon {
-  font-size: 40rpx;
-  margin-bottom: 8rpx;
+  font-size: 36rpx;
+  margin-bottom: 6rpx;
 }
 
 .category-item .category-name {
-  font-size: 24rpx;
+  font-size: 22rpx;
   color: #333;
   line-height: 1.2;
   word-break: break-all;
-  padding: 0 8rpx;
+  padding: 0 4rpx;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* 子分类网格样式 */
 .subcategory-grid .category-item {
-  width: calc(20% - 13rpx);
+  width: calc(20% - 16rpx);
+  min-height: 100rpx;
 }
 
 .subcategory-grid .category-item .category-icon {
@@ -290,4 +298,69 @@
 
 .subcategory-grid .category-item .category-name {
   font-size: 22rpx;
+}
+
+/* 类型按钮组样式 */
+.type-buttons {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 10rpx;
+}
+
+/* 日期时间同行显示样式 */
+.input-row {
+  display: flex;
+  gap: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.input-item-half {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.input-item-half .label {
+  display: block;
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 10rpx;
+}
+
+.input-item-half .select {
+  width: 100%;
+  padding: 0 24rpx;
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  border: 1rpx solid #eee;
+  border-radius: 12rpx;
+  font-size: 32rpx;
+  box-sizing: border-box;
+  background-color: white;
+}
+
+.type-btn {
+  flex: 1;
+  padding: 20rpx 0;
+  background-color: #f5f5f5;
+  border-radius: 12rpx;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.type-btn.selected {
+  background-color: #e6f7ff;
+  border: 2rpx solid #1890ff;
+}
+
+.type-btn .type-btn-text {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.type-btn.selected .type-btn-text {
+  color: #1890ff;
+  font-weight: bold;
 }

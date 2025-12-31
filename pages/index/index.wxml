@@ -8,29 +8,40 @@
 
     <view class="input-section" id="inputSection">
       <view class="input-item">
+        <text class="label">类型</text>
+        <view class="type-buttons">
+          <view class="type-btn {{typeIndex === 0 ? 'selected' : ''}}" bindtap="onTypeChange" data-index="0">
+            <text class="type-btn-text">{{types[0]}}</text>
+          </view>
+          <view class="type-btn {{typeIndex === 1 ? 'selected' : ''}}" bindtap="onTypeChange" data-index="1">
+            <text class="type-btn-text">{{types[1]}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="input-item">
         <text class="label">金额</text>
         <input class="input" type="digit" placeholder="请输入金额" bindinput="onAmountInput" value="{{amount}}" focus="{{focusAmount}}" adjust-position="true" />
       </view>
 
       <view class="input-item">
-        <text class="label">日期</text>
-        <picker class="select" mode="date" start="2020-01-01" end="2100-12-31" bindchange="onDateChange" value="{{currentDate}}">
-          <view class="picker-text">{{currentDate}}</view>
-        </picker>
+        <text class="label">备注</text>
+        <input class="input" placeholder="请输入备注" bindinput="onNoteInput" value="{{note}}" adjust-position="true" />
       </view>
 
-      <view class="input-item">
-        <text class="label">时间</text>
-        <picker class="select" mode="time" bindchange="onTimeChange" value="{{currentTime}}">
-          <view class="picker-text">{{currentTime}}</view>
-        </picker>
-      </view>
-
-      <view class="input-item">
-        <text class="label">类型</text>
-        <picker class="select" mode="selector" range="{{types}}" bindchange="onTypeChange" value="{{typeIndex}}">
-          <view class="picker-text">{{types[typeIndex]}}</view>
-        </picker>
+      <view class="input-row">
+        <view class="input-item-half">
+          <text class="label">日期</text>
+          <picker class="select" mode="date" start="2020-01-01" end="2100-12-31" bindchange="onDateChange" value="{{currentDate}}">
+            <view class="picker-text">{{currentDate}}</view>
+          </picker>
+        </view>
+        <view class="input-item-half">
+          <text class="label">时间</text>
+          <picker class="select" mode="time" bindchange="onTimeChange" value="{{currentTime}}">
+            <view class="picker-text">{{currentTime}}</view>
+          </picker>
+        </view>
       </view>
 
       <view class="input-item">
@@ -69,11 +80,6 @@
         </view>
       </view>
 
-      <view class="input-item">
-        <text class="label">备注</text>
-        <input class="input" placeholder="请输入备注" bindinput="onNoteInput" value="{{note}}" adjust-position="true" />
-      </view>
-
       <view class="btn" bindtap="addRecord">添加记录</view>
     </view>
 
@@ -108,15 +114,40 @@
       <text class="dialog-title">编辑记录</text>
       
       <view class="input-item">
+        <text class="label">类型</text>
+        <view class="type-buttons">
+          <view class="type-btn {{editRecord.type === types[0] ? 'selected' : ''}}" bindtap="onEditTypeChange" data-type="{{types[0]}}">
+            <text class="type-btn-text">{{types[0]}}</text>
+          </view>
+          <view class="type-btn {{editRecord.type === types[1] ? 'selected' : ''}}" bindtap="onEditTypeChange" data-type="{{types[1]}}">
+            <text class="type-btn-text">{{types[1]}}</text>
+          </view>
+        </view>
+      </view>
+      
+      <view class="input-item">
         <text class="label">金额</text>
         <input class="input" type="digit" placeholder="请输入金额" bindinput="onEditAmountInput" value="{{editRecord.amount}}" adjust-position="true" />
       </view>
       
       <view class="input-item">
-        <text class="label">类型</text>
-        <picker class="select" mode="selector" range="{{types}}" bindchange="onEditTypeChange" value="{{types.indexOf(editRecord.type)}}">
-          <view class="picker-text">{{editRecord.type}}</view>
-        </picker>
+        <text class="label">备注</text>
+        <input class="input" placeholder="请输入备注" bindinput="onEditNoteInput" value="{{editRecord.note}}" adjust-position="true" />
+      </view>
+      
+      <view class="input-row">
+        <view class="input-item-half">
+          <text class="label">日期</text>
+          <picker class="select" mode="date" start="2020-01-01" end="2100-12-31" bindchange="onDateChange" value="{{editRecord.date}}">
+            <view class="picker-text">{{editRecord.date}}</view>
+          </picker>
+        </view>
+        <view class="input-item-half">
+          <text class="label">时间</text>
+          <picker class="select" mode="time" bindchange="onTimeChange" value="{{editRecord.time}}">
+            <view class="picker-text">{{editRecord.time}}</view>
+          </picker>
+        </view>
       </view>
       
       <view class="input-item">
@@ -153,11 +184,6 @@
             </view>
           </block>
         </view>
-      </view>
-      
-      <view class="input-item">
-        <text class="label">备注</text>
-        <input class="input" placeholder="请输入备注" bindinput="onEditNoteInput" value="{{editRecord.note}}" adjust-position="true" />
       </view>
       
       <view class="dialog-buttons">

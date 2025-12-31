@@ -72,6 +72,16 @@
       <view class="dialog-content">
         <text class="dialog-title">添加子分类</text>
         <input class="dialog-input" placeholder="请输入子分类名称" bindinput="onNewSubcategoryInput" value="{{newSubcategoryName}}" adjust-position="true" />
+        <view class="dialog-section">
+          <text class="section-label">选择图标</text>
+          <view class="icon-grid">
+            <block wx:for="{{availableIcons}}" wx:key="index">
+              <view class="icon-item {{selectedIcon === item ? 'selected' : ''}}" bindtap="selectIcon" data-icon="{{item}}">
+                <text class="icon">{{item}}</text>
+              </view>
+            </block>
+          </view>
+        </view>
         <view class="dialog-buttons">
           <view class="dialog-btn cancel" bindtap="hideAddSubcategoryDialog">
             <text class="dialog-btn-text">取消</text>

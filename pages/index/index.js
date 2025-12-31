@@ -157,18 +157,21 @@ Page({
           { id: 1, name: '现金', balance: 0, icon: '💵' },
           { id: 2, name: '银行卡', balance: 0, icon: '💳' },
           { id: 3, name: '支付宝', balance: 0, icon: '🐜' },
-          { id: 4, name: '微信', balance: 0, icon: '💬' }
+          { id: 4, name: '微信', balance: 0, icon: '💬' },
+          { id: 8, name: '借给他人', balance: 0, icon: '👤' }
         ],
         liability: [
           { id: 5, name: '信用卡', balance: 0, icon: '💳' },
           { id: 6, name: '花呗', balance: 0, icon: '🌸' },
           { id: 7, name: '银行贷款', balance: 0, icon: '🏦' },
-          { id: 8, name: '借给他人', balance: 0, icon: '👤' },
           { id: 9, name: '借用他人', balance: 0, icon: '🤝' }
         ]
       };
       wx.setStorageSync('accounts', accounts);
     }
+    
+    // 确保账户类型正确（修复借给他人应为存款账户的问题）
+    accounts = this.ensureAccountTypes(accounts);
     
     // 确保所有账户余额都是数字类型
     Object.keys(accounts).forEach(type => {
@@ -188,6 +191,34 @@ Page({
       allAccounts,
       accounts: accountsWithIcons
     });
+  },
+  
+  // 确保账户类型正确
+  ensureAccountTypes(accounts) {
+    // 检查是否存在“借给他人”在负债账户中，如果是则移动到存款账户
+    const liabilityAccounts = accounts.liability || [];
+    const depositAccounts = accounts.deposit || [];
+    
+    // 查找“借给他人”账户
+    const borrowedIndex = liabilityAccounts.findIndex(acc => acc.name === '借给他人');
+    if (borrowedIndex !== -1) {
+      // 将“借给他人”从负债账户移到存款账户
+      const borrowedAccount = liabilityAccounts.splice(borrowedIndex, 1)[0];
+      depositAccounts.push(borrowedAccount);
+    }
+    
+    // 查找“借用他人”账户是否在存款账户中，如果是则移动到负债账户
+    const lentIndex = depositAccounts.findIndex(acc => acc.name === '借用他人');
+    if (lentIndex !== -1) {
+      // 将“借用他人”从存款账户移到负债账户
+      const lentAccount = depositAccounts.splice(lentIndex, 1)[0];
+      liabilityAccounts.push(lentAccount);
+    }
+    
+    return {
+      deposit: depositAccounts,
+      liability: liabilityAccounts
+    };
   },
 
   // 选择分类
@@ -241,8 +272,9 @@ Page({
 
   // 类型选择事件
   onTypeChange(e) {
+    const index = e.currentTarget.dataset.index;
     this.setData({
-      typeIndex: e.detail.value
+      typeIndex: parseInt(index)
     });
     // 切换类型后重新加载分类
     this.loadCategories();
@@ -370,14 +402,14 @@ Page({
       return;
     }
     
-    // 计算新余额并验证，负债账户的逻辑与存款账户相反
+    // 计算新余额并验证
     let newBalance;
     if (accountType === 'deposit') {
       // 存款账户：收入增加余额，支出减少余额
       newBalance = isIncome ? account.balance + amount : account.balance - amount;
     } else {
-      // 负债账户：收入减少负债（余额更正，变得更接近0），支出增加负债（余额更负）
-      newBalance = isIncome ? account.balance - amount : account.balance + amount;
+      // 负债账户：收入减少负债（还款，使负值向0靠近），支出增加负债（消费，使负值更负）
+      newBalance = isIncome ? account.balance + amount : account.balance - amount;
     }
     
     // 验证余额：存款账户不能为负，负债账户不能为正
@@ -480,8 +512,7 @@ Page({
 
   // 编辑记录类型选择
   onEditTypeChange(e) {
-    const typeIndex = e.detail.value;
-    const type = this.data.types[typeIndex];
+    const type = e.currentTarget.dataset.type;
     
     this.setData({
       'editRecord.type': type
@@ -633,8 +664,8 @@ Page({
       // 存款账户：收入增加余额，支出减少余额，恢复则相反
       newBalance = isIncome ? account.balance - amount : account.balance + amount;
     } else {
-      // 负债账户：收入减少负债，支出增加负债，恢复则相反
-      newBalance = isIncome ? account.balance + amount : account.balance - amount;
+      // 负债账户：收入减少负债（还款），支出增加负债（消费），恢复则相反
+      newBalance = isIncome ? account.balance - amount : account.balance + amount;
     }
     
     // 更新对应账户的余额

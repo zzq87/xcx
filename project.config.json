@@ -45,7 +45,7 @@
     "disableSWC": true
   },
   "compileType": "miniprogram",
-  "libVersion": "2.19.4",
+  "libVersion": "3.13.0",
   "appid": "wx7bfd5ca188f8e9f0",
   "projectname": "记账小程序",
   "isGameTourist": false,

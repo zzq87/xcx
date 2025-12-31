@@ -9,7 +9,7 @@
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#fff",
-    "navigationBarTitleText": "记账小程序",
+    "navigationBarTitleText": "如意记账",
     "navigationBarTextStyle": "black"
   },
   "tabBar": {

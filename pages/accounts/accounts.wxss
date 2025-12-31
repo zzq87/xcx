@@ -216,7 +216,10 @@
   padding: 32rpx;
   width: 85%;
   max-width: 650rpx;
-  max-height: 90vh;
+  max-height: 80vh;
+  min-height: 400rpx;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
   margin-top: 10vh;
 }
@@ -232,6 +235,8 @@
 
 .dialog-section {
   margin-bottom: 32rpx;
+  display: flex;
+  flex-direction: column;
 }
 
 .section-label {
@@ -258,12 +263,13 @@
   background-color: #f5f5f5;
   border-radius: 8rpx;
   padding: 16rpx;
-  max-height: 600rpx;
+  max-height: 300rpx;
   overflow-y: auto;
-  min-height: 300rpx;
+  min-height: 100rpx;
   display: flex;
   flex-wrap: wrap;
   gap: 16rpx;
+  flex-shrink: 1;
 }
 
 .account-option {
@@ -351,7 +357,9 @@
 .dialog-buttons {
   display: flex;
   gap: 20rpx;
-  margin-top: 40rpx;
+  margin-top: auto;
+  padding-top: 20rpx;
+  flex-shrink: 0;
 }
 
 .dialog-btn {
@@ -425,4 +433,103 @@
 
 .icon-option-text {
   font-size: 40rpx;
+}
+
+/* 子账户样式 */
+.subaccount-list {
+  margin-left: 40rpx;
+  margin-right: 20rpx;
+}
+
+.subaccount-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 24rpx;
+  border-bottom: 1rpx solid #f8f8f8;
+  background-color: #fafafa;
+  border-radius: 8rpx;
+  margin-bottom: 10rpx;
+  transition: background-color 0.2s;
+}
+
+.subaccount-item:last-child {
+  border-bottom: none;
+}
+
+.subaccount-item:active {
+  background-color: #f0f0f0;
+}
+
+.subaccount-info {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.subaccount-icon {
+  font-size: 36rpx;
+}
+
+.subaccount-name {
+  font-size: 28rpx;
+  color: #555;
+}
+
+.subaccount-balance {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #07c160;
+}
+
+.subaccount-balance.negative {
+  color: #ff4d4f;
+}
+
+.subaccount-actions {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.add-subaccount-btn {
+  padding: 16rpx 24rpx;
+  margin: 10rpx 0 20rpx 40rpx;
+  background-color: #e8f4ff;
+  border-radius: 8rpx;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.add-subaccount-btn:active {
+  background-color: #d0e8ff;
+}
+
+.add-subaccount-btn-text {
+  font-size: 26rpx;
+  color: #1890ff;
+  font-weight: 500;
+}
+
+/* 展开/收起按钮样式 */
+.account-name-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  cursor: pointer;
+}
+
+.subaccount-toggle {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.empty-subaccounts {
+  padding: 16rpx 24rpx;
+  color: #999;
+  font-size: 24rpx;
+  text-align: center;
+  background-color: #fafafa;
+  border-radius: 8rpx;
+  margin-bottom: 10rpx;
 }

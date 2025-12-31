@@ -132,3 +132,131 @@
   color: #666;
   transition: all 0.3s;
 }
+
+/* 导出按钮样式 */
+.export-section {
+  padding: 20rpx 0;
+  display: flex;
+  justify-content: center;
+}
+
+.export-btn {
+  padding: 20rpx 40rpx;
+  background-color: #07c160;
+  color: white;
+  border-radius: 8rpx;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.export-btn:active {
+  background-color: #06a050;
+}
+
+.export-btn-text {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: white;
+}
+
+/* 时间选择器样式 */
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.time-selector {
+  display: flex;
+  align-items: center;
+  background-color: #f5f5f5;
+  border-radius: 8rpx;
+  padding: 8rpx 16rpx;
+  cursor: pointer;
+}
+
+.date {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.arrow {
+  margin-left: 8rpx;
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 日期选择弹窗样式 */
+.date-picker-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1001;
+}
+
+.date-picker-content {
+  width: 80%;
+  max-width: 600rpx;
+  background-color: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  box-sizing: border-box;
+}
+
+.date-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.date-picker-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.close-btn {
+  font-size: 40rpx;
+  color: #999;
+  cursor: pointer;
+}
+
+.date-range-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  margin-bottom: 30rpx;
+}
+
+.date-input {
+  padding: 20rpx;
+  background-color: #f5f5f5;
+  border-radius: 10rpx;
+  text-align: center;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.date-picker-footer {
+  display: flex;
+  justify-content: center;
+}
+
+.confirm-btn {
+  padding: 20rpx 40rpx;
+  background-color: #07c160;
+  color: white;
+  border-radius: 10rpx;
+  text-align: center;
+  font-size: 32rpx;
+  font-weight: bold;
+  cursor: pointer;
+}
