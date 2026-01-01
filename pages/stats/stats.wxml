@@ -3,12 +3,8 @@
   <view class="page-content">
     <view class="header">
       <view class="header-content">
-        <text class="title">收支统计</text>
-        <view class="time-selector">
-          <text class="date" bindtap="showDatePicker">{{currentDate}}</text>
-          <text class="arrow">▼</text>
-        </view>
-      </view>
+      <text class="title">收支统计</text>
+    </view>
     </view>
 
     <view class="stats-summary">
@@ -26,7 +22,36 @@
       </view>
     </view>
 
-    <view class="chart-section" wx:if="{{!hideCharts}}">
+    <!-- 日期选择器 -->
+    <view class="date-range-picker">
+      <view class="date-picker-item">
+        <text class="date-picker-label">开始日期</text>
+        <picker mode="date" value="{{startDate}}" fields="day" end="{{endDate}}" bindchange="onStartDateChange">
+          <view class="date-picker-input">
+            <text>{{startDate}}</text>
+            <text class="date-picker-arrow">▼</text>
+          </view>
+        </picker>
+      </view>
+      <view class="date-picker-item">
+        <text class="date-picker-label">结束日期</text>
+        <picker mode="date" value="{{endDate}}" fields="day" start="{{startDate}}" bindchange="onEndDateChange">
+          <view class="date-picker-input">
+            <text>{{endDate}}</text>
+            <text class="date-picker-arrow">▼</text>
+          </view>
+        </picker>
+      </view>
+    </view>
+    
+    <!-- 快捷日期选择 -->
+    <view class="quick-date-selector">
+      <view class="quick-date-btn {{activeQuickDate === 'week' ? 'active' : ''}}" bindtap="onQuickDateSelect" data-type="week">本周</view>
+      <view class="quick-date-btn {{activeQuickDate === 'month' ? 'active' : ''}}" bindtap="onQuickDateSelect" data-type="month">本月</view>
+      <view class="quick-date-btn {{activeQuickDate === 'threeMonth' ? 'active' : ''}}" bindtap="onQuickDateSelect" data-type="threeMonth">三个月</view>
+    </view>
+
+    <view class="chart-section">
       <text class="section-title">分类统计</text>
       <view class="chart-tabs">
         <view class="tab-item {{chartType === 'category' ? 'active' : ''}}" bindtap="switchChartType" data-type="category">
@@ -39,7 +64,7 @@
       <canvas id="categoryChart" type="2d" class="chart"></canvas>
     </view>
 
-    <view class="chart-section" wx:if="{{!hideCharts}}">
+    <view class="chart-section">
       <text class="section-title">日统计</text>
       <canvas id="dailyChart" type="2d" class="chart"></canvas>
     </view>
@@ -50,29 +75,6 @@
       </view>
     </view>
     
-    <!-- 日期选择弹窗 -->
-    <view class="date-picker-modal" wx:if="{{showDatePickerModal}}" bindtap="hideDatePicker" style="z-index: 1001;">
-      <view class="date-picker-content" bindtap="stopPropagation">
-        <view class="date-picker-header">
-          <text class="date-picker-title">选择日期</text>
-          <text class="close-btn" bindtap="hideDatePicker">×</text>
-        </view>
-        <view class="date-range-selector">
-          <picker mode="date" value="{{startDate}}" fields="day" end="{{endDate}}" bindchange="onStartDateChange">
-            <view class="date-input">
-              <text>开始日期: {{startDate}}</text>
-            </view>
-          </picker>
-          <picker mode="date" value="{{endDate}}" fields="day" start="{{startDate}}" bindchange="onEndDateChange">
-            <view class="date-input">
-              <text>结束日期: {{endDate}}</text>
-            </view>
-          </picker>
-        </view>
-        <view class="date-picker-footer">
-          <view class="confirm-btn" bindtap="confirmDate">确定</view>
-        </view>
-      </view>
-    </view>
+
   </view>
 </view>

@@ -468,58 +468,60 @@ Page({
     const isIncome = record.type === '收入';
     const accountId = record.accountId;
     
-    // 查找账户及其类型
+    // 查找账户
     let account = null;
-    let accountType = '';
+    let accountIndex = -1;
+    let isNewStructure = false;
     
-    Object.keys(accounts).forEach(type => {
-      const foundAccount = accounts[type].find(acc => acc.id === accountId);
-      if (foundAccount) {
-        account = foundAccount;
-        accountType = type;
+    if (accounts.accounts) {
+      // 新数据结构：{ accounts: [...] }
+      isNewStructure = true;
+      accountIndex = accounts.accounts.findIndex(acc => acc.id === accountId);
+      if (accountIndex !== -1) {
+        account = accounts.accounts[accountIndex];
       }
-    });
+    } else if (accounts.deposit && accounts.liability) {
+      // 旧数据结构：{ deposit: [...], liability: [...] }
+      let found = false;
+      Object.keys(accounts).forEach(type => {
+        if (found) return;
+        const foundAccount = accounts[type].find(acc => acc.id === accountId);
+        if (foundAccount) {
+          account = foundAccount;
+          found = true;
+        }
+      });
+    }
     
     if (!account) {
       return;
     }
     
-    // 计算新余额并验证
-    let newBalance;
-    if (accountType === 'deposit') {
-      // 存款账户：收入增加余额，支出减少余额
-      newBalance = isIncome ? account.balance + amount : account.balance - amount;
+    // 计算新余额
+    let newBalance = account.balance;
+    if (isIncome) {
+      // 收入：增加余额
+      newBalance += amount;
     } else {
-      // 负债账户：收入减少负债（还款，使负值向0靠近），支出增加负债（消费，使负值更负）
-      newBalance = isIncome ? account.balance + amount : account.balance - amount;
+      // 支出：减少余额
+      newBalance -= amount;
     }
     
-    // 验证余额：存款账户不能为负，负债账户不能为正
-    if (accountType === 'deposit' && newBalance < 0) {
-      wx.showToast({
-        title: '存款账户余额不能为负数',
-        icon: 'none'
+    // 更新账户余额
+    if (isNewStructure) {
+      // 新数据结构更新
+      accounts.accounts[accountIndex] = { ...account, balance: newBalance };
+    } else {
+      // 旧数据结构更新
+      Object.keys(accounts).forEach(type => {
+        accounts[type] = accounts[type].map(acc => {
+          if (acc.id === accountId) {
+            return { ...acc, balance: newBalance };
+          }
+          return acc;
+        });
       });
-      return false;
     }
-    
-    if (accountType === 'liability' && newBalance > 0) {
-      wx.showToast({
-        title: '负债账户余额不能为正数',
-        icon: 'none'
-      });
-      return false;
-    }
-    
-    // 更新对应账户的余额
-    Object.keys(accounts).forEach(type => {
-      accounts[type] = accounts[type].map(acc => {
-        if (acc.id === accountId) {
-          return { ...acc, balance: newBalance };
-        }
-        return acc;
-      });
-    });
     
     // 保存更新后的账户数据
     wx.setStorageSync('accounts', accounts);
@@ -537,9 +539,19 @@ Page({
     const todayRecords = records.filter(record => record.date === today);
     
     // 获取所有账户信息
-    let accounts = wx.getStorageSync('accounts') || { deposit: [], liability: [] };
-    // 合并所有账户到一个数组
-    const allAccounts = [...accounts.deposit, ...accounts.liability];
+    let accounts = wx.getStorageSync('accounts') || { accounts: [] };
+    // 处理不同的账户数据结构
+    let allAccounts = [];
+    if (accounts.accounts) {
+      // 新数据结构：{ accounts: [...] }
+      allAccounts = accounts.accounts;
+    } else if (accounts.deposit && accounts.liability) {
+      // 旧数据结构：{ deposit: [...], liability: [...] }
+      allAccounts = [...accounts.deposit, ...accounts.liability];
+    } else {
+      // 空数据结构
+      allAccounts = [];
+    }
     
     // 为每条记录添加账户名称
     const todayRecordsWithAccount = todayRecords.map(record => {
@@ -719,46 +731,65 @@ Page({
 
   // 恢复原始记录的余额
   restoreOriginalBalance(record) {
-    let accounts = wx.getStorageSync('accounts') || { deposit: [], liability: [] };
+    let accounts = wx.getStorageSync('accounts') || { accounts: [] };
     const amount = record.amount;
     const isIncome = record.type === '收入';
     const accountId = record.accountId;
     
-    // 查找账户及其类型
+    // 查找账户
     let account = null;
-    let accountType = '';
+    let accountIndex = -1;
+    let isNewStructure = false;
     
-    Object.keys(accounts).forEach(type => {
-      const foundAccount = accounts[type].find(acc => acc.id === accountId);
-      if (foundAccount) {
-        account = foundAccount;
-        accountType = type;
+    if (accounts.accounts) {
+      // 新数据结构：{ accounts: [...] }
+      isNewStructure = true;
+      accountIndex = accounts.accounts.findIndex(acc => acc.id === accountId);
+      if (accountIndex !== -1) {
+        account = accounts.accounts[accountIndex];
       }
-    });
+    } else if (accounts.deposit && accounts.liability) {
+      // 旧数据结构：{ deposit: [...], liability: [...] }
+      let found = false;
+      Object.keys(accounts).forEach(type => {
+        if (found) return;
+        const foundAccount = accounts[type].find(acc => acc.id === accountId);
+        if (foundAccount) {
+          account = foundAccount;
+          found = true;
+        }
+      });
+    }
     
     if (!account) {
       return;
     }
     
     // 恢复余额（与原始更新相反）
-    let newBalance;
-    if (accountType === 'deposit') {
-      // 存款账户：收入增加余额，支出减少余额，恢复则相反
-      newBalance = isIncome ? account.balance - amount : account.balance + amount;
+    let newBalance = account.balance;
+    if (isIncome) {
+      // 收入：恢复时减少余额
+      newBalance -= amount;
     } else {
-      // 负债账户：收入减少负债（还款），支出增加负债（消费），恢复则相反
-      newBalance = isIncome ? account.balance - amount : account.balance + amount;
+      // 支出：恢复时增加余额
+      newBalance += amount;
     }
     
-    // 更新对应账户的余额
-    Object.keys(accounts).forEach(type => {
-      accounts[type] = accounts[type].map(acc => {
-        if (acc.id === accountId) {
-          return { ...acc, balance: newBalance };
-        }
-        return acc;
+    // 更新账户余额
+    if (isNewStructure) {
+      // 新数据结构更新
+      accounts.accounts[accountIndex] = { ...account, balance: newBalance };
+    } else {
+      // 旧数据结构更新
+      Object.keys(accounts).forEach(type => {
+        accounts[type] = accounts[type].map(acc => {
+          if (acc.id === accountId) {
+            return { ...acc, balance: newBalance };
+          }
+          return acc;
+        });
       });
-    });
+    }
     
     // 保存更新后的账户数据
     wx.setStorageSync('accounts', accounts);

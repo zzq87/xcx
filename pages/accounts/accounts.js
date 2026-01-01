@@ -387,8 +387,9 @@ Page({
       });
     });
     
-    // 保存更新后的账户数据
-    wx.setStorageSync('accounts', accounts);
+    // 保存更新后的账户数据，转换为统一的数据结构
+    const allAccounts = [...accounts.deposit, ...accounts.liability];
+    wx.setStorageSync('accounts', { accounts: allAccounts });
     
     // 保存转账记录
     this.saveTransferRecord(transferForm, amount);
@@ -526,8 +527,9 @@ Page({
     // 添加新账户
     accounts[accountType].push(newAccountData);
     
-    // 保存到本地存储
-    wx.setStorageSync('accounts', accounts);
+    // 保存到本地存储，转换为统一的数据结构
+    const allAccounts = [...accounts.deposit, ...accounts.liability];
+    wx.setStorageSync('accounts', { accounts: allAccounts });
     
     // 计算新的总余额
     let total = 0;
@@ -678,8 +680,9 @@ Page({
       });
     }
     
-    // 保存到本地存储
-    wx.setStorageSync('accounts', accounts);
+    // 保存到本地存储，转换为统一的数据结构
+    const allAccounts = [...accounts.deposit, ...accounts.liability];
+    wx.setStorageSync('accounts', { accounts: allAccounts });
     
     // 计算新的总余额
     let total = 0;
@@ -712,8 +715,9 @@ Page({
       accounts[type] = accounts[type].filter(account => account.id !== accountToDelete);
     });
     
-    // 保存到本地存储
-    wx.setStorageSync('accounts', accounts);
+    // 保存到本地存储，转换为统一的数据结构
+    const allAccounts = [...accounts.deposit, ...accounts.liability];
+    wx.setStorageSync('accounts', { accounts: allAccounts });
     
     // 计算新的总余额
     let total = 0;

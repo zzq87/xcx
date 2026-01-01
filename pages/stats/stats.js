@@ -1,4 +1,4 @@
-// stats.js
+// 修复后的 stats.js
 Page({
   data: {
     currentDate: '',
@@ -11,14 +11,15 @@ Page({
     subcategoryStats: {},
     dailyStats: {},
     chartType: 'category', // category 或 subcategory
-    // 日期选择器相关
-    showDatePickerModal: false,
-    hideCharts: false // 控制图表显示/隐藏
+    activeQuickDate: '' // 当前选中的快捷日期选项
   },
 
   onLoad() {
     this.initCurrentMonth();
-    this.initDatePickerData();
+    this.loadStatsData();
+  },
+  
+  onShow() {
     this.loadStatsData();
   },
   
@@ -33,72 +34,19 @@ Page({
     this.setData({
       currentDate: today,
       startDate: today,
-      endDate: today
+      endDate: today,
+      currentMonth: `${year}-${month}` // 添加当前月份属性
     });
-  },
-
-  onShow() {
-    this.loadStatsData();
-  },
-  
-  // 初始化当前月份
-  initCurrentMonth() {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    this.setData({
-      currentMonth: `${year}-${month}`
-    });
-  },
-  
-  // 显示日期选择器
-  showDatePicker() {
-    this.setData({
-      showDatePickerModal: true,
-      hideCharts: true // 隐藏图表
-    });
-  },
-  
-  // 隐藏日期选择器
-  hideDatePicker() {
-    this.setData({
-      showDatePickerModal: false,
-      hideCharts: false // 显示图表
-    });
-  },
-  
-  // 阻止事件冒泡
-  stopPropagation() {
-    // 此函数用于阻止点击弹窗内容时触发背景关闭事件
   },
   
   // 开始日期变化
   onStartDateChange(e) {
     const startDate = e.detail.value;
-    this.setData({
-      startDate: startDate
-    });
-  },
-  
-  // 结束日期变化
-  onEndDateChange(e) {
-    const endDate = e.detail.value;
-    this.setData({
-      endDate: endDate
-    });
-  },
-  
-  // 确认选择日期
-  confirmDate() {
-    const { startDate, endDate } = this.data;
+    let { endDate } = this.data;
     
     // 确保开始日期不晚于结束日期
     if (startDate > endDate) {
-      wx.showToast({
-        title: '开始日期不能晚于结束日期',
-        icon: 'none'
-      });
-      return;
+      endDate = startDate;
     }
     
     // 更新显示的日期范围
@@ -108,27 +56,91 @@ Page({
     }
     
     this.setData({
+      startDate: startDate,
+      endDate: endDate,
       currentDate: displayDate,
-      showDatePickerModal: false
+      activeQuickDate: '' // 清除快捷日期选中状态
     });
     
     // 重新加载统计数据
     this.loadStatsData();
   },
   
-  // 初始化当前日期
-  initCurrentMonth() {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const today = `${year}-${month}-${day}`;
-      
+  // 结束日期变化
+  onEndDateChange(e) {
+    const endDate = e.detail.value;
+    const { startDate } = this.data;
+    
+    // 更新显示的日期范围
+    let displayDate = startDate;
+    if (startDate !== endDate) {
+      displayDate = `${startDate} 至 ${endDate}`;
+    }
+    
     this.setData({
-      currentDate: today,
-      startDate: today,
-      endDate: today
+      endDate: endDate,
+      currentDate: displayDate,
+      activeQuickDate: '' // 清除快捷日期选中状态
     });
+    
+    // 重新加载统计数据
+    this.loadStatsData();
+  },
+  
+  // 快捷日期选择
+  onQuickDateSelect(e) {
+    const type = e.currentTarget.dataset.type;
+    const today = new Date();
+    let startDate = '';
+    let endDate = '';
+    
+    // 格式化日期为 yyyy-MM-dd 格式
+    const formatDate = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    
+    endDate = formatDate(today);
+    
+    switch (type) {
+      case 'week':
+        // 计算本周的开始日期（周一）
+        const dayOfWeek = today.getDay();
+        const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+        startDate = formatDate(new Date(today.setDate(diff)));
+        break;
+      case 'month':
+        // 计算本月的开始日期（1号）
+        startDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
+        break;
+      case 'threeMonth':
+        // 计算三个月前的开始日期
+        const threeMonthsAgo = new Date();
+        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 2); // 减去2个月，加上当前月，共3个月
+        threeMonthsAgo.setDate(1); // 设置为1号
+        startDate = formatDate(threeMonthsAgo);
+        break;
+      default:
+        break;
+    }
+    
+    // 更新显示的日期范围
+    let displayDate = startDate;
+    if (startDate !== endDate) {
+      displayDate = `${startDate} 至 ${endDate}`;
+    }
+    
+    this.setData({
+      startDate: startDate,
+      endDate: endDate,
+      currentDate: displayDate,
+      activeQuickDate: type
+    });
+    
+    // 重新加载统计数据
+    this.loadStatsData();
   },
 
   // 加载统计数据
@@ -186,12 +198,12 @@ Page({
       }
       subcategoryStats[subcategoryKey][record.type === '收入' ? 'income' : 'expense'] += record.amount;
       
-      // 日统计
-      const day = record.date.split('-')[2];
-      if (!dailyStats[day]) {
-        dailyStats[day] = { income: 0, expense: 0 };
+      // 日统计：使用完整日期作为键，确保正确排序
+      const fullDate = record.date;
+      if (!dailyStats[fullDate]) {
+        dailyStats[fullDate] = { income: 0, expense: 0 };
       }
-      dailyStats[day][record.type === '收入' ? 'income' : 'expense'] += record.amount;
+      dailyStats[fullDate][record.type === '收入' ? 'income' : 'expense'] += record.amount;
     });
     
     const balance = totalIncome - totalExpense;
@@ -250,112 +262,113 @@ Page({
       const chartWidth = res[0].width;
       const chartHeight = res[0].height;
     
-    // 绘制背景
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, chartWidth, chartHeight);
+      // 绘制背景
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, chartWidth, chartHeight);
     
-    // 绘制坐标轴
-    ctx.strokeStyle = '#ddd';
-    ctx.lineWidth = 1;
-    // X轴
-    ctx.beginPath();
-    ctx.moveTo(40, chartHeight - 40);
-    ctx.lineTo(chartWidth - 20, chartHeight - 40);
-    ctx.stroke();
-    // Y轴
-    ctx.beginPath();
-    ctx.moveTo(40, 20);
-    ctx.lineTo(40, chartHeight - 40);
-    ctx.stroke();
+      // 绘制坐标轴
+      ctx.strokeStyle = '#ddd';
+      ctx.lineWidth = 1;
+      // X轴
+      ctx.beginPath();
+      ctx.moveTo(40, chartHeight - 40);
+      ctx.lineTo(chartWidth - 20, chartHeight - 40);
+      ctx.stroke();
+      // Y轴
+      ctx.beginPath();
+      ctx.moveTo(40, 20);
+      ctx.lineTo(40, chartHeight - 40);
+      ctx.stroke();
     
-    // 如果没有数据，显示提示文字
-    if (items.length === 0) {
-      ctx.fillStyle = '#999';
-      ctx.font = '14px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('暂无统计数据', chartWidth / 2, chartHeight / 2);
-      return;
-    }
-    
-    // 计算最大值
-    let maxValue = 0;
-    items.forEach((item, index) => {
-      let stat;
-      if (chartType === 'category') {
-        stat = stats[item];
-      } else {
-        const key = Object.keys(stats)[index];
-        stat = stats[key];
+      // 如果没有数据，显示提示文字
+      if (items.length === 0) {
+        ctx.fillStyle = '#999';
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('暂无统计数据', chartWidth / 2, chartHeight / 2);
+        return;
       }
-      // 考虑收入和支出的最大值
-      const value = Math.max(stat.income, stat.expense);
-      if (value > maxValue) {
-        maxValue = value;
-      }
-    });
     
-    // 防止除以0
-    if (maxValue === 0) maxValue = 1;
+      // 计算最大值
+      let maxValue = 0;
+      items.forEach((item, index) => {
+        let stat;
+        if (chartType === 'category') {
+          stat = stats[item];
+        } else {
+          const key = Object.keys(stats)[index];
+          stat = stats[key];
+        }
+        // 考虑收入和支出的最大值
+        const value = Math.max(stat.income, stat.expense);
+        if (value > maxValue) {
+          maxValue = value;
+        }
+      });
     
-    // 绘制柱状图
-    const barWidth = (chartWidth - 60) / (items.length * 3);
-    const gap = barWidth;
+      // 防止除以0
+      if (maxValue === 0) maxValue = 1;
     
-    items.forEach((item, index) => {
-      let stat;
-      if (chartType === 'category') {
-        stat = stats[item];
-      } else {
-        const key = Object.keys(stats)[index];
-        stat = stats[key];
-      }
-      const x = 40 + index * (barWidth * 2 + gap) + gap;
-      
-      // 确保金额为正数（如果是支出，取绝对值）
-      const incomeValue = Math.abs(stat.income);
-      const expenseValue = Math.abs(stat.expense);
-      
-      // 绘制收入柱
-      const incomeHeight = (incomeValue / maxValue) * (chartHeight - 60);
+      // 绘制柱状图
+      const barWidth = (chartWidth - 60) / (items.length * 3);
+      const gap = barWidth;
+    
+      items.forEach((item, index) => {
+        let stat;
+        if (chartType === 'category') {
+          stat = stats[item];
+        } else {
+          const key = Object.keys(stats)[index];
+          stat = stats[key];
+        }
+        const x = 40 + index * (barWidth * 2 + gap) + gap;
+        
+        // 确保金额为正数（如果是支出，取绝对值）
+        const incomeValue = Math.abs(stat.income);
+        const expenseValue = Math.abs(stat.expense);
+        
+        // 绘制收入柱
+        const incomeHeight = (incomeValue / maxValue) * (chartHeight - 60);
+        ctx.fillStyle = '#07c160';
+        ctx.fillRect(x, chartHeight - 40 - incomeHeight, barWidth, incomeHeight);
+        
+        // 绘制支出柱
+        const expenseHeight = (expenseValue / maxValue) * (chartHeight - 60);
+        ctx.fillStyle = '#ff4d4f';
+        ctx.fillRect(x + barWidth, chartHeight - 40 - expenseHeight, barWidth, expenseHeight);
+        
+        // 绘制分类名称
+        ctx.fillStyle = '#666';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        
+        // 子分类名称可能较长，旋转显示
+        if (chartType === 'subcategory') {
+          ctx.save();
+          ctx.translate(x + barWidth, chartHeight - 20);
+          ctx.rotate(-Math.PI / 4);
+          ctx.fillText(item, 0, 0);
+          ctx.restore();
+        } else {
+          ctx.fillText(item, x + barWidth, chartHeight - 20);
+        }
+      });
+    
+      // 绘制图例
       ctx.fillStyle = '#07c160';
-      ctx.fillRect(x, chartHeight - 40 - incomeHeight, barWidth, incomeHeight);
-      
-      // 绘制支出柱
-      const expenseHeight = (expenseValue / maxValue) * (chartHeight - 60);
-      ctx.fillStyle = '#ff4d4f';
-      ctx.fillRect(x + barWidth, chartHeight - 40 - expenseHeight, barWidth, expenseHeight);
-      
-      // 绘制分类名称
+      ctx.fillRect(40, 10, 10, 10);
       ctx.fillStyle = '#666';
-      ctx.font = '12px sans-serif';
-      ctx.textAlign = 'center';
-      
-      // 子分类名称可能较长，旋转显示
-      if (chartType === 'subcategory') {
-        ctx.save();
-        ctx.translate(x + barWidth, chartHeight - 20);
-        ctx.rotate(-Math.PI / 4);
-        ctx.fillText(item, 0, 0);
-        ctx.restore();
-      } else {
-        ctx.fillText(item, x + barWidth, chartHeight - 20);
-      }
-    });
+      ctx.font = `${Math.max(10, chartHeight / 20)}px sans-serif`;
+      ctx.textAlign = 'left';
+      ctx.fillText('收入', 60, 20);
     
-    // 绘制图例
-    ctx.fillStyle = '#07c160';
-    ctx.fillRect(40, 10, 10, 10);
-    ctx.fillStyle = '#666';
-    ctx.font = `${Math.max(10, chartHeight / 20)}px sans-serif`;
-    ctx.textAlign = 'left';
-    ctx.fillText('收入', 60, 20);
+      ctx.fillStyle = '#ff4d4f';
+      ctx.fillRect(120, 10, 10, 10);
+      ctx.fillStyle = '#666';
+      ctx.textAlign = 'left';
+      ctx.fillText('支出', 140, 20);
     
-    ctx.fillStyle = '#ff4d4f';
-    ctx.fillRect(120, 10, 10, 10);
-    ctx.fillStyle = '#666';
-    ctx.fillText('支出', 140, 20);
-    
-    // Canvas 2D 会自动渲染，不需要额外操作
+      // Canvas 2D 会自动渲染，不需要额外操作
     });
   },
 
@@ -374,95 +387,97 @@ Page({
       ctx.scale(dpr, dpr);
       
       const dailyStats = this.data.dailyStats;
-      const days = Object.keys(dailyStats).sort((a, b) => parseInt(a) - parseInt(b));
+      const days = Object.keys(dailyStats).sort(); // 使用完整日期排序
       const chartWidth = res[0].width;
       const chartHeight = res[0].height;
     
-    // 绘制背景
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, chartWidth, chartHeight);
-    
-    // 绘制坐标轴
-    ctx.strokeStyle = '#ddd';
-    ctx.lineWidth = 1;
-    // X轴
-    ctx.beginPath();
-    ctx.moveTo(40, chartHeight - 40);
-    ctx.lineTo(chartWidth - 20, chartHeight - 40);
-    ctx.stroke();
-    // Y轴
-    ctx.beginPath();
-    ctx.moveTo(40, 20);
-    ctx.lineTo(40, chartHeight - 40);
-    ctx.stroke();
-    
-    // 如果没有数据，显示提示文字
-    if (days.length === 0) {
-      ctx.fillStyle = '#999';
-      ctx.font = '14px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('暂无日统计数据', chartWidth / 2, chartHeight / 2);
-      return;
-    }
-    
-    // 计算最大值
-    let maxValue = 0;
-    days.forEach(day => {
-      const stat = dailyStats[day];
-      // 考虑收入和支出的最大值
-      const value = Math.max(stat.income, stat.expense);
-      if (value > maxValue) {
-        maxValue = value;
+      // 绘制背景
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, chartWidth, chartHeight);
+      
+      // 绘制坐标轴
+      ctx.strokeStyle = '#ddd';
+      ctx.lineWidth = 1;
+      // X轴
+      ctx.beginPath();
+      ctx.moveTo(40, chartHeight - 40);
+      ctx.lineTo(chartWidth - 20, chartHeight - 40);
+      ctx.stroke();
+      // Y轴
+      ctx.beginPath();
+      ctx.moveTo(40, 20);
+      ctx.lineTo(40, chartHeight - 40);
+      ctx.stroke();
+      
+      // 如果没有数据，显示提示文字
+      if (days.length === 0) {
+        ctx.fillStyle = '#999';
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('暂无日统计数据', chartWidth / 2, chartHeight / 2);
+        return;
       }
-    });
-    
-    // 防止除以0
-    if (maxValue === 0) maxValue = 1;
-    
-    // 绘制柱状图
-    const barWidth = (chartWidth - 60) / (days.length * 3);
-    const gap = barWidth;
-    
-    days.forEach((day, index) => {
-      const stat = dailyStats[day];
-      const x = 40 + index * (barWidth * 2 + gap) + gap;
       
-      // 确保金额为正数（如果是支出，取绝对值）
-      const incomeValue = Math.abs(stat.income);
-      const expenseValue = Math.abs(stat.expense);
+      // 计算最大值
+      let maxValue = 0;
+      days.forEach(day => {
+        const stat = dailyStats[day];
+        // 考虑收入和支出的最大值
+        const value = Math.max(stat.income, stat.expense);
+        if (value > maxValue) {
+          maxValue = value;
+        }
+      });
       
-      // 绘制收入柱
-      const incomeHeight = (incomeValue / maxValue) * (chartHeight - 60);
+      // 防止除以0
+      if (maxValue === 0) maxValue = 1;
+      
+      // 绘制柱状图
+      const barWidth = (chartWidth - 60) / (days.length * 3);
+      const gap = barWidth;
+      
+      days.forEach((day, index) => {
+        const stat = dailyStats[day];
+        const x = 40 + index * (barWidth * 2 + gap) + gap;
+        
+        // 确保金额为正数（如果是支出，取绝对值）
+        const incomeValue = Math.abs(stat.income);
+        const expenseValue = Math.abs(stat.expense);
+        
+        // 绘制收入柱
+        const incomeHeight = (incomeValue / maxValue) * (chartHeight - 60);
+        ctx.fillStyle = '#07c160';
+        ctx.fillRect(x, chartHeight - 40 - incomeHeight, barWidth, incomeHeight);
+        
+        // 绘制支出柱
+        const expenseHeight = (expenseValue / maxValue) * (chartHeight - 60);
+        ctx.fillStyle = '#ff4d4f';
+        ctx.fillRect(x + barWidth, chartHeight - 40 - expenseHeight, barWidth, expenseHeight);
+        
+        // 绘制日期：只显示日部分
+        const dayOfMonth = day.split('-')[2];
+        ctx.fillStyle = '#666';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(dayOfMonth + '日', x + barWidth, chartHeight - 20);
+      });
+      
+      // 绘制图例
       ctx.fillStyle = '#07c160';
-      ctx.fillRect(x, chartHeight - 40 - incomeHeight, barWidth, incomeHeight);
-      
-      // 绘制支出柱
-      const expenseHeight = (expenseValue / maxValue) * (chartHeight - 60);
-      ctx.fillStyle = '#ff4d4f';
-      ctx.fillRect(x + barWidth, chartHeight - 40 - expenseHeight, barWidth, expenseHeight);
-      
-      // 绘制日期
+      ctx.fillRect(40, 10, 10, 10);
       ctx.fillStyle = '#666';
-      ctx.font = '12px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(day + '日', x + barWidth, chartHeight - 20);
-    });
-    
-    // 绘制图例
-    ctx.fillStyle = '#07c160';
-    ctx.fillRect(40, 10, 10, 10);
-    ctx.fillStyle = '#666';
-    ctx.font = `${Math.max(10, chartHeight / 20)}px sans-serif`;
-    ctx.textAlign = 'left';
-    ctx.fillText('收入', 60, 20);
-    
-    ctx.fillStyle = '#ff4d4f';
-    ctx.fillRect(120, 10, 10, 10);
-    ctx.fillStyle = '#666';
-    ctx.fillText('支出', 140, 20);
-    
-    // 在Canvas 2D中，确保渲染
-    canvas.requestAnimationFrame(() => {});
+      ctx.font = `${Math.max(10, chartHeight / 20)}px sans-serif`;
+      ctx.textAlign = 'left';
+      ctx.fillText('收入', 60, 20);
+      
+      ctx.fillStyle = '#ff4d4f';
+      ctx.fillRect(120, 10, 10, 10);
+      ctx.fillStyle = '#666';
+      ctx.textAlign = 'left';
+      ctx.fillText('支出', 140, 20);
+      
+      // 在Canvas 2D中，确保渲染
+      canvas.requestAnimationFrame(() => {});
     });
   },
 
@@ -509,8 +524,15 @@ Page({
         accountInfo = this.escapeCsvField(`${record.accountIcon || ''} ${record.accountName}`);
       } else {
         // 如果记录中没有账户信息，需要从账户数据中获取
-        const accounts = wx.getStorageSync('accounts') || { deposit: [], liability: [] };
-        const allAccounts = [...accounts.deposit, ...accounts.liability];
+        const accounts = wx.getStorageSync('accounts') || { accounts: [] };
+        let allAccounts = [];
+        if (accounts.accounts) {
+          // 新数据结构：{ accounts: [...] }
+          allAccounts = accounts.accounts;
+        } else if (accounts.deposit && accounts.liability) {
+          // 旧数据结构：{ deposit: [...], liability: [...] }
+          allAccounts = [...accounts.deposit, ...accounts.liability];
+        }
         const account = allAccounts.find(acc => acc.id === record.accountId);
         accountInfo = this.escapeCsvField(account ? `${account.icon} ${account.name}` : '未知账户');
       }
@@ -571,4 +593,4 @@ Page({
     }
     return field;
   }
-})
+});
