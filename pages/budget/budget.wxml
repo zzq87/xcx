@@ -1,0 +1,113 @@
+<!-- budget.wxml -->
+<view class="container">
+  <view class="page-content">
+    <view class="header">
+      <text class="title">预算管理</text>
+      <text class="current-month">{{currentMonth}}</text>
+    </view>
+
+    <!-- 预算列表 -->
+    <view class="budget-list">
+      <view wx:if="{{budgets.length === 0}}" class="empty-state">
+        <text class="empty-text">暂无预算设置</text>
+        <text class="empty-hint">点击下方按钮添加预算</text>
+      </view>
+      
+      <view wx:else>
+        <view wx:for="{{budgets}}" wx:key="index" class="budget-item">
+        <view class="budget-info">
+          <view class="budget-category">
+            <text class="category-name">{{item.category}}</text>
+            <text wx:if="{{item.subcategory}}" class="subcategory-name">{{item.subcategory}}</text>
+          </view>
+          <view class="budget-amounts">
+            <view class="amount-item">
+              <text class="amount-label">预算:</text>
+              <text class="amount-value">¥{{item.amount}}</text>
+            </view>
+            <view class="amount-item">
+              <text class="amount-label">已用:</text>
+              <text class="amount-value spent">¥{{item.spent}}</text>
+            </view>
+            <view class="amount-item">
+              <text class="amount-label">剩余:</text>
+              <text class="amount-value remaining">{{item.remaining > 0 ? '¥' + item.remaining : '超出预算'}}</text>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 预算进度条 -->
+        <view class="budget-progress">
+          <view class="progress-bar">
+            <view class="progress-fill" style="width: {{item.percentage}}%;"></view>
+          </view>
+          <text class="progress-text">{{item.percentage}}%</text>
+        </view>
+        
+        <!-- 删除按钮 -->
+        <view class="delete-btn" bindtap="deleteBudget" data-index="{{index}}">
+          <text class="delete-icon">🗑️</text>
+        </view>
+      </view>
+      </view>
+    </view>
+
+    <!-- 添加预算按钮 -->
+    <view class="add-budget-btn" bindtap="showAddBudgetDialog">
+      <text class="add-icon">+</text>
+      <text class="add-text">添加预算</text>
+    </view>
+
+    <!-- 添加预算对话框 -->
+    <view wx:if="{{showAddBudgetDialog}}" class="dialog-overlay">
+      <view class="dialog-container">
+        <view class="dialog-header">
+          <text class="dialog-title">添加预算</text>
+          <text class="dialog-close" bindtap="hideAddBudgetDialog">✕</text>
+        </view>
+        
+        <view class="dialog-content">
+          <!-- 分类选择 -->
+          <view class="form-item">
+            <text class="form-label">选择分类</text>
+            <picker mode="selector" value="{{categoryIndex}}" range="{{categories}}" bindchange="onCategoryChange">
+              <view class="picker">
+                {{categories[categoryIndex] || '请选择分类'}}
+              </view>
+            </picker>
+          </view>
+          
+          <!-- 子分类选择 -->
+          <view class="form-item">
+            <text class="form-label">选择子分类</text>
+            <picker mode="selector" value="{{subcategoryIndex}}" range="{{subcategories}}" bindchange="onSubcategoryChange">
+              <view class="picker">
+                {{subcategories[subcategoryIndex] || '无'}}
+              </view>
+            </picker>
+          </view>
+          
+          <!-- 预算金额 -->
+          <view class="form-item">
+            <text class="form-label">预算金额</text>
+            <view class="amount-input-container">
+              <text class="currency-symbol">¥</text>
+              <input 
+                type="digit" 
+                placeholder="请输入预算金额" 
+                class="amount-input" 
+                bindinput="onAmountInput"
+                value="{{newBudget.amount}}"
+              />
+            </view>
+          </view>
+        </view>
+        
+        <view class="dialog-footer">
+          <view class="cancel-btn" bindtap="hideAddBudgetDialog">取消</view>
+          <view class="confirm-btn" bindtap="addBudget">确定</view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

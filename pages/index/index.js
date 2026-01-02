@@ -84,30 +84,30 @@ Page({
       typeCategories = categories[categoryType].map(cat => cat.name);
       categoryData = categories[categoryType];
     } else {
-      // 默认分类
-      const defaultCategories = {
-        income: [
-          { id: 1, name: '工资', subcategories: [], icon: '💰' },
-          { id: 2, name: '奖金', subcategories: [], icon: '🎁' },
-          { id: 3, name: '其他收入', subcategories: [], icon: '📈' }
-        ],
-        expense: [
-          { id: 4, name: '餐饮', subcategories: [
-            { id: 11, name: '早餐', icon: '🍞' },
-            { id: 12, name: '午餐', icon: '🍱' },
-            { id: 13, name: '晚餐', icon: '🍜' },
-            { id: 14, name: '水果', icon: '🍎' },
-            { id: 15, name: '零食', icon: '🍪' },
-            { id: 16, name: '饮料', icon: '🥤' }
-          ], icon: '🍽️' },
-          { id: 5, name: '交通', subcategories: [], icon: '🚗' },
-          { id: 6, name: '购物', subcategories: [], icon: '🛍️' },
-          { id: 7, name: '娱乐', subcategories: [], icon: '🎮' },
-          { id: 8, name: '医疗', subcategories: [], icon: '🏥' },
-          { id: 9, name: '教育', subcategories: [], icon: '📚' },
-          { id: 10, name: '其他支出', subcategories: [], icon: '💸' }
-        ]
-      };
+      // 默认分类（统一emoji图标风格）
+    const defaultCategories = {
+      income: [
+        { id: 1, name: '工资', subcategories: [], icon: '💼' },
+        { id: 2, name: '奖金', subcategories: [], icon: '🏆' },
+        { id: 3, name: '其他收入', subcategories: [], icon: '💰' }
+      ],
+      expense: [
+        { id: 4, name: '餐饮', subcategories: [
+          { id: 11, name: '早餐', icon: '🍳' },
+          { id: 12, name: '午餐', icon: '🍜' },
+          { id: 13, name: '晚餐', icon: '🍽️' },
+          { id: 14, name: '水果', icon: '🍇' },
+          { id: 15, name: '零食', icon: '🍬' },
+          { id: 16, name: '饮料', icon: '🥤' }
+        ], icon: '🍴' },
+        { id: 5, name: '交通', subcategories: [], icon: '🚗' },
+        { id: 6, name: '购物', subcategories: [], icon: '🛒' },
+        { id: 7, name: '娱乐', subcategories: [], icon: '🎬' },
+        { id: 8, name: '医疗', subcategories: [], icon: '🏥' },
+        { id: 9, name: '教育', subcategories: [], icon: '📖' },
+        { id: 10, name: '其他支出', subcategories: [], icon: '💳' }
+      ]
+    };
       
       // 保存默认数据到本地存储
       wx.setStorageSync('categories', defaultCategories);
@@ -163,9 +163,9 @@ Page({
     
     // 如果没有账户数据，初始化默认账户
     if (!accounts) {
-      // 默认账户数据
+      // 默认账户数据（统一emoji图标风格）
       const defaultAccounts = [
-        { id: 1, name: '现金', balance: 0, icon: '💵', category: '现金账户' },
+        { id: 1, name: '现金', balance: 0, icon: '💴', category: '现金账户' },
         { id: 2, name: '银行卡', balance: 0, icon: '💳', category: '储蓄账户' },
         { id: 3, name: '支付宝', balance: 0, icon: '🐜', category: '虚拟账户' },
         { id: 4, name: '微信钱包', balance: 0, icon: '💬', category: '虚拟账户' },
@@ -202,11 +202,19 @@ Page({
             category = '债权账户';
           }
           
+          // 设置特定账户的图标
+          let icon = account.icon || '💵';
+          if (account.name === '支付宝') {
+            icon = '🐜';
+          } else if (account.name === '微信' || account.name === '微信钱包') {
+            icon = '💬';
+          }
+          
           allAccounts.push({
             id: id++,
             name: account.name === '微信' ? '微信钱包' : account.name,
             balance: parseFloat(account.balance) || 0,
-            icon: account.icon || '💵',
+            icon: icon,
             category: category
           });
         });
@@ -251,12 +259,21 @@ Page({
       wx.setStorageSync('accounts', accounts);
     }
     
-    // 确保所有账户都有category字段
-    const allAccounts = accounts.accounts.map(account => ({
-      ...account,
-      balance: parseFloat(account.balance) || 0,
-      icon: account.icon || '💵'
-    }));
+    // 确保所有账户都有category字段，并设置正确的图标
+    const allAccounts = accounts.accounts.map(account => {
+      let icon = account.icon || '💵';
+      // 确保特定账户显示正确的图标
+      if (account.name === '支付宝') {
+        icon = '🐜';
+      } else if (account.name === '微信钱包') {
+        icon = '💬';
+      }
+      return {
+        ...account,
+        balance: parseFloat(account.balance) || 0,
+        icon: icon
+      };
+    });
     
     // 按分类组织账户
     const categorizedAccounts = {};

@@ -21,7 +21,7 @@ Page({
       name: '',
       type: 'deposit',
       balance: 0,
-      icon: '💵',
+      icon: '💴',
       category: '现金账户' // 默认分类
     },
     showEditAccountDialog: false,
@@ -30,16 +30,16 @@ Page({
       name: '',
       balance: 0,
       type: 'deposit',
-      icon: '💵',
+      icon: '💴',
       category: '现金账户' // 默认分类
     },
     showDeleteConfirmDialog: false,
     accountToDelete: null,
-    // 预设图标集合
+    // 预设图标集合（统一emoji图标风格）
     presetIcons: [
-      '💵', '💳', '蚂蚁', '💬', '🏦', '💰', '💸', '📱', 
-      '💎', '🎁', '📈', '📉', '🏠', '🚗', '✈️', '🍔',
-      '👔', '💊', '📚', '🎮', '🎨', '🏋️', '🎵', '📷',
+      '💴', '💳', '🐜', '💬', '🏦', '💰', '💸', '📱', 
+      '💎', '🎁', '📈', '📉', '🏠', '🚗', '✈️', '🍴',
+      '👔', '💊', '📖', '🎬', '🎨', '🏋️', '🎵', '📷',
       '🎒', '👶', '🐶', '🐱', '🌱', '🔥', '💧', '☀️'
     ]
   },
@@ -69,9 +69,9 @@ Page({
     
     // 如果没有账户数据，初始化默认账户
     if (!accounts) {
-      // 默认账户数据
+      // 默认账户数据（统一emoji图标风格）
       const defaultAccounts = [
-        { id: 1, name: '现金', balance: 0, icon: '💵', category: '现金账户' },
+        { id: 1, name: '现金', balance: 0, icon: '💴', category: '现金账户' },
         { id: 2, name: '银行卡', balance: 0, icon: '💳', category: '储蓄账户' },
         { id: 3, name: '支付宝', balance: 0, icon: '🐜', category: '虚拟账户' },
         { id: 4, name: '微信钱包', balance: 0, icon: '💬', category: '虚拟账户' },
@@ -112,7 +112,7 @@ Page({
             id: id++,
             name: account.name === '微信' ? '微信钱包' : account.name,
             balance: parseFloat(account.balance) || 0,
-            icon: account.icon || '💵',
+            icon: account.icon || '💴',
             category: category
           });
         });
@@ -161,7 +161,7 @@ Page({
     const allAccounts = accounts.accounts.map(account => ({
       ...account,
       balance: parseFloat(account.balance) || 0,
-      icon: account.icon || '💵',
+      icon: account.icon || '💴',
       category: account.category || '现金账户'
     }));
     

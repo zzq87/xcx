@@ -4,6 +4,7 @@
     "pages/stats/stats",
     "pages/categories/categories",
     "pages/accounts/accounts",
+    "pages/budget/budget",
     "pages/logs/logs"
   ],
   "window": {
@@ -24,6 +25,10 @@
       {
         "pagePath": "pages/stats/stats",
         "text": "统计"
+      },
+      {
+        "pagePath": "pages/budget/budget",
+        "text": "预算管理"
       },
       {
         "pagePath": "pages/categories/categories",
