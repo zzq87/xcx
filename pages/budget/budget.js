@@ -94,16 +94,24 @@ Page({
 
     // 计算预算使用情况
     const updatedBudgets = monthBudgets.map(budget => {
-      const spent = this.calculateSpent(budget.category, budget.subcategory);
-      // 确保amount是有效的数字
-      const amount = parseFloat(budget.amount) || 0;
-      // 确保spent是有效的数字
-      const validSpent = parseFloat(spent) || 0;
+      // 确保budget.category和budget.subcategory是字符串类型
+      const category = budget.category || '';
+      const subcategory = budget.subcategory || '';
+      
+      // 计算已使用金额
+      const spent = this.calculateSpent(category, subcategory);
+      
+      // 确保amount是有效的正数，并且不为0
+      const amount = Math.max(parseFloat(budget.amount) || 0, 0);
+      // 确保spent是有效的正数，并且不大于amount
+      const validSpent = Math.min(Math.max(parseFloat(spent) || 0, 0), amount);
+      
       // 计算进度百分比，确保在0-100之间
       let percentage = 0;
       if (amount > 0) {
         percentage = Math.min(Math.max(Math.round((validSpent / amount) * 100), 0), 100);
       }
+      
       return {
         ...budget,
         amount,
@@ -124,21 +132,44 @@ Page({
     const currentMonth = this.data.currentMonth;
 
     let spent = 0;
-    // 简化计算逻辑，确保准确性
+    // 确保 category 是字符串类型
+    const targetCategory = category || '';
+    // 确保 subcategory 是字符串类型
+    const targetSubcategory = subcategory || '';
+    
+    // 遍历记录，只计算当前分类和子分类的支出
     for (let i = 0; i < records.length; i++) {
       const record = records[i];
       // 跳过无效记录
-      if (!record || !record.date) continue;
+      if (!record || !record.date || !record.category || !record.type) continue;
       // 检查是否是当前月份的记录
       if (!record.date.startsWith(currentMonth)) continue;
       // 检查是否是支出
       if (record.type !== '支出') continue;
       // 检查分类是否匹配
-      if (record.category !== category) continue;
+      if (record.category !== targetCategory) continue;
+      
       // 检查子分类是否匹配
-      if (subcategory && record.subcategory !== subcategory) continue;
-      // 累加金额
-      spent += parseFloat(record.amount) || 0;
+      // 简化子分类匹配逻辑，只检查当前分类和子分类的支出
+      // 避免所有支出都被计算到当前预算中
+      let isRelevant = false;
+      if (!targetSubcategory) {
+        // 如果预算没有设置子分类，只匹配没有子分类的记录
+        isRelevant = !record.subcategory;
+      } else {
+        // 如果预算设置了子分类，检查记录的子分类是否包含该子分类
+        // 只计算当前子分类的支出
+        isRelevant = record.subcategory && (record.subcategory === targetSubcategory || record.subcategory.includes(targetSubcategory));
+      }
+      
+      if (!isRelevant) continue;
+      
+      // 确保 record.amount 是有效的数字
+      const recordAmount = parseFloat(record.amount) || 0;
+      // 只累加正数的支出金额
+      if (recordAmount > 0) {
+        spent += recordAmount;
+      }
     }
 
     return spent;
