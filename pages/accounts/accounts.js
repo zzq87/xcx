@@ -21,7 +21,7 @@ Page({
       name: '',
       type: 'deposit',
       balance: 0,
-      icon: '💴',
+      icon: '💰',
       category: '现金账户' // 默认分类
     },
     showEditAccountDialog: false,
@@ -30,17 +30,19 @@ Page({
       name: '',
       balance: 0,
       type: 'deposit',
-      icon: '💴',
+      icon: '💰',
       category: '现金账户' // 默认分类
     },
     showDeleteConfirmDialog: false,
     accountToDelete: null,
     // 预设图标集合（统一emoji图标风格）
     presetIcons: [
-      '💴', '💳', '🐜', '💬', '🏦', '💰', '💸', '📱', 
-      '💎', '🎁', '📈', '📉', '🏠', '🚗', '✈️', '🍴',
-      '👔', '💊', '📖', '🎬', '🎨', '🏋️', '🎵', '📷',
-      '🎒', '👶', '🐶', '🐱', '🌱', '🔥', '💧', '☀️'
+      '💰', '💳', '📱', '💬', '🏦', '💵', '💸', '💳', 
+      '💎', '🎁', '📈', '📉', '🏠', '🚗', '✈️', '🍽️',
+      '👔', '💊', '📖', '🎭', '🎨', '🏃', '🎵', '📷',
+      '🎒', '👶', '🐶', '🐱', '🌱', '🔥', '💧', '☀️',
+      '🌟', '🎯', '❤️', '🔑', '🔒', '💡', '⭐', '⚡',
+      '📱', '💼', '🏆', '📤', '📥', '📦', '🗺️', '📞'
     ]
   },
 
@@ -71,18 +73,18 @@ Page({
     if (!accounts) {
       // 默认账户数据（统一emoji图标风格）
       const defaultAccounts = [
-        { id: 1, name: '现金', balance: 0, icon: '💴', category: '现金账户' },
+        { id: 1, name: '现金', balance: 0, icon: '💰', category: '现金账户' },
         { id: 2, name: '银行卡', balance: 0, icon: '💳', category: '储蓄账户' },
-        { id: 3, name: '支付宝', balance: 0, icon: '🐜', category: '虚拟账户' },
+        { id: 3, name: '支付宝', balance: 0, icon: '📱', category: '虚拟账户' },
         { id: 4, name: '微信钱包', balance: 0, icon: '💬', category: '虚拟账户' },
         { id: 5, name: '信用卡', balance: 0, icon: '💳', category: '信用账户' },
-        { id: 6, name: '蚂蚁花呗', balance: 0, icon: '🌸', category: '信用账户' },
-        { id: 7, name: '借给他人', balance: 0, icon: '👤', category: '债权账户' },
+        { id: 6, name: '蚂蚁花呗', balance: 0, icon: '💳', category: '信用账户' },
+        { id: 7, name: '借给他人', balance: 0, icon: '🤝', category: '债权账户' },
         { id: 8, name: '借用他人', balance: 0, icon: '🤝', category: '负债账户' },
         { id: 9, name: '基金账户', balance: 0, icon: '📈', category: '投资账户' },
-        { id: 10, name: '股票账户', balance: 0, icon: '📊', category: '投资账户' },
-        { id: 11, name: '应收款项', balance: 0, icon: '📝', category: '债权账户' },
-        { id: 12, name: '应付款项', balance: 0, icon: '📋', category: '负债账户' }
+        { id: 10, name: '股票账户', balance: 0, icon: '📈', category: '投资账户' },
+        { id: 11, name: '应收款项', balance: 0, icon: '📥', category: '债权账户' },
+        { id: 12, name: '应付款项', balance: 0, icon: '📤', category: '负债账户' }
       ];
       
       accounts = { accounts: defaultAccounts };
@@ -157,13 +159,13 @@ Page({
       wx.setStorageSync('accounts', accounts);
     }
     
-    // 确保所有账户余额都是数字类型
-    const allAccounts = accounts.accounts.map(account => ({
-      ...account,
-      balance: parseFloat(account.balance) || 0,
-      icon: account.icon || '💴',
-      category: account.category || '现金账户'
-    }));
+     // 确保所有账户余额都是数字类型
+     const allAccounts = accounts.accounts.map(account => ({
+       ...account,
+       balance: typeof account.balance === 'string' ? parseFloat(account.balance) : (account.balance || 0),
+       icon: account.icon || '💴',
+       category: account.category || '现金账户'
+     }));
     
     // 按类型重新组织账户
     const accountsByType = {
@@ -385,24 +387,25 @@ Page({
         }
         return account;
       });
-    });
-    
-    // 保存更新后的账户数据，转换为统一的数据结构
-    const allAccounts = [...accounts.deposit, ...accounts.liability];
-    wx.setStorageSync('accounts', { accounts: allAccounts });
-    
-    // 保存转账记录
-    this.saveTransferRecord(transferForm, amount);
-    
-    // 计算新的总余额
-    let total = 0;
-    Object.keys(accounts).forEach(type => {
-      accounts[type].forEach(account => {
-        total += (parseFloat(account.balance) || 0);
-      });
-    });
-    
-    // 更新页面数据
+     });
+     
+     // 保存更新后的账户数据，转换为统一的数据结构
+     const allAccounts = [...accounts.deposit, ...accounts.liability];
+     wx.setStorageSync('accounts', { accounts: allAccounts });
+     
+     // 保存转账记录
+     this.saveTransferRecord(transferForm, amount);
+     
+     // 计算新的总余额
+     let total = 0;
+     Object.keys(accounts).forEach(type => {
+       accounts[type].forEach(account => {
+         const balance = typeof account.balance === 'string' ? parseFloat(account.balance) : (account.balance || 0);
+         total += balance;
+       });
+     });
+     
+     // 更新页面数据
     this.setData({
       accounts,
       currentAccounts: accounts[this.data.activeTab],
@@ -490,7 +493,7 @@ Page({
     let accountType = newAccount.name === '借给他人' ? 'deposit' : newAccount.type;
     
     // 验证初始余额
-    const balance = parseFloat(newAccount.balance) || 0;
+         const balance = typeof newAccount.balance === 'string' ? parseFloat(newAccount.balance) : (newAccount.balance || 0);
     if (accountType === 'deposit' && balance < 0) {
       wx.showToast({
         title: '存款账户初始余额不能为负数',
@@ -519,39 +522,40 @@ Page({
     const newAccountData = {
       id: maxId + 1,
       name: newAccount.name.trim(),
-      balance: balance,
-      icon: newAccount.icon,
-      category: newAccount.category || '现金账户' // 添加账户分类
-    };
-    
-    // 添加新账户
-    accounts[accountType].push(newAccountData);
-    
-    // 保存到本地存储，转换为统一的数据结构
-    const allAccounts = [...accounts.deposit, ...accounts.liability];
-    wx.setStorageSync('accounts', { accounts: allAccounts });
-    
-    // 计算新的总余额
-    let total = 0;
-    Object.keys(accounts).forEach(type => {
-      accounts[type].forEach(account => {
-        total += (parseFloat(account.balance) || 0);
-      });
-    });
-    
-    // 更新页面数据
-    this.setData({
-      accounts,
-      currentAccounts: accounts[this.data.activeTab],
-      showAddAccountDialog: false,
-      totalBalance: total
-    });
-    
-    wx.showToast({
-      title: '添加成功',
-      icon: 'success'
-    });
-  },
+       balance: balance,
+       icon: newAccount.icon,
+       category: newAccount.category || '现金账户' // 添加账户分类
+     };
+     
+     // 添加新账户
+     accounts[accountType].push(newAccountData);
+     
+     // 保存到本地存储，转换为统一的数据结构
+     const allAccounts = [...accounts.deposit, ...accounts.liability];
+     wx.setStorageSync('accounts', { accounts: allAccounts });
+     
+     // 计算新的总余额
+     let total = 0;
+     Object.keys(accounts).forEach(type => {
+       accounts[type].forEach(account => {
+         const balance = typeof account.balance === 'string' ? parseFloat(account.balance) : (account.balance || 0);
+         total += balance;
+       });
+     });
+     
+     // 更新页面数据
+     this.setData({
+       accounts,
+       currentAccounts: accounts[this.data.activeTab],
+       showAddAccountDialog: false,
+       totalBalance: total
+     });
+     
+     wx.showToast({
+       title: '添加成功',
+       icon: 'success'
+     });
+   },
 
   // 显示编辑账户对话框
   showEditAccountDialog(e) {
@@ -638,7 +642,7 @@ Page({
     let accountType = editAccount.name === '借给他人' ? 'deposit' : editAccount.type;
     
     // 验证余额
-    const balance = parseFloat(editAccount.balance) || 0;
+         const balance = typeof editAccount.balance === 'string' ? parseFloat(editAccount.balance) : (editAccount.balance || 0);
     if (accountType === 'deposit' && balance < 0) {
       wx.showToast({
         title: '存款账户余额不能为负数',
@@ -654,57 +658,58 @@ Page({
       return;
     }
     
-    // 如果账户类型发生变化，需要从旧类型账户列表中移除，并添加到新类型账户列表中
-    if (editAccount.type !== accountType) {
-      // 从旧类型账户列表中移除
-      accounts[editAccount.type] = accounts[editAccount.type].filter(account => account.id !== editAccount.id);
-      
-      // 添加到新类型账户列表
-      const updatedAccount = {
-        ...editAccount,
-        name: editAccount.name.trim(),
-        balance: balance
-      };
-      accounts[accountType].push(updatedAccount);
-    } else {
-      // 账户类型未变化，仅更新账户信息
-      accounts[editAccount.type] = accounts[editAccount.type].map(account => {
-        if (account.id === editAccount.id) {
-          return {
-            ...account,
-            name: editAccount.name.trim(),
-            balance: balance
-          };
-        }
-        return account;
-      });
-    }
-    
-    // 保存到本地存储，转换为统一的数据结构
-    const allAccounts = [...accounts.deposit, ...accounts.liability];
-    wx.setStorageSync('accounts', { accounts: allAccounts });
-    
-    // 计算新的总余额
-    let total = 0;
-    Object.keys(accounts).forEach(type => {
-      accounts[type].forEach(account => {
-        total += (parseFloat(account.balance) || 0);
-      });
-    });
-    
-    // 更新页面数据
-    this.setData({
-      accounts,
-      currentAccounts: accounts[this.data.activeTab],
-      showEditAccountDialog: false,
-      totalBalance: total
-    });
-    
-    wx.showToast({
-      title: '保存成功',
-      icon: 'success'
-    });
-  },
+     // 如果账户类型发生变化，需要从旧类型账户列表中移除，并添加到新类型账户列表中
+     if (editAccount.type !== accountType) {
+       // 从旧类型账户列表中移除
+       accounts[editAccount.type] = accounts[editAccount.type].filter(account => account.id !== editAccount.id);
+       
+       // 添加到新类型账户列表
+       const updatedAccount = {
+         ...editAccount,
+         name: editAccount.name.trim(),
+         balance: balance
+       };
+       accounts[accountType].push(updatedAccount);
+     } else {
+       // 账户类型未变化，仅更新账户信息
+       accounts[editAccount.type] = accounts[editAccount.type].map(account => {
+         if (account.id === editAccount.id) {
+           return {
+             ...account,
+             name: editAccount.name.trim(),
+             balance: balance
+           };
+         }
+         return account;
+       });
+     }
+     
+     // 保存到本地存储，转换为统一的数据结构
+     const allAccounts = [...accounts.deposit, ...accounts.liability];
+     wx.setStorageSync('accounts', { accounts: allAccounts });
+     
+     // 计算新的总余额
+     let total = 0;
+     Object.keys(accounts).forEach(type => {
+       accounts[type].forEach(account => {
+         const balance = typeof account.balance === 'string' ? parseFloat(account.balance) : (account.balance || 0);
+         total += balance;
+       });
+     });
+     
+     // 更新页面数据
+     this.setData({
+       accounts,
+       currentAccounts: accounts[this.data.activeTab],
+       showEditAccountDialog: false,
+       totalBalance: total
+     });
+     
+     wx.showToast({
+       title: '保存成功',
+       icon: 'success'
+     });
+   },
   
   // 删除账户
   deleteAccount() {
@@ -719,26 +724,27 @@ Page({
     const allAccounts = [...accounts.deposit, ...accounts.liability];
     wx.setStorageSync('accounts', { accounts: allAccounts });
     
-    // 计算新的总余额
-    let total = 0;
-    Object.keys(accounts).forEach(type => {
-      accounts[type].forEach(account => {
-        total += (parseFloat(account.balance) || 0);
-      });
-    });
-    
-    // 更新页面数据
-    this.setData({
-      accounts,
-      currentAccounts: accounts[this.data.activeTab],
-      showDeleteConfirmDialog: false,
-      accountToDelete: null,
-      totalBalance: total
-    });
-    
-    wx.showToast({
-      title: '删除成功',
-      icon: 'success'
-    });
-  }
+     // 计算新的总余额
+     let total = 0;
+     Object.keys(accounts).forEach(type => {
+       accounts[type].forEach(account => {
+         const balance = typeof account.balance === 'string' ? parseFloat(account.balance) : (account.balance || 0);
+         total += balance;
+       });
+     });
+     
+     // 更新页面数据
+     this.setData({
+       accounts,
+       currentAccounts: accounts[this.data.activeTab],
+       showDeleteConfirmDialog: false,
+       accountToDelete: null,
+       totalBalance: total
+     });
+     
+     wx.showToast({
+       title: '删除成功',
+       icon: 'success'
+     });
+   }
 });

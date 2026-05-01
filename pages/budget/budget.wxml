@@ -40,8 +40,7 @@
         <view class="budget-progress">
           <view class="progress-bar">
             <view class="progress-fill" 
-                  style="width: {{item.percentage}}%; 
-                         background-color: {{item.percentage <= 50 ? '#07c160' : (item.percentage <= 80 ? '#faad14' : '#ff4d4f')}};"></view>
+                  style="width: {{item.percentage}}%; background-color: {{item.percentage <= 50 ? '#07c160' : (item.percentage <= 80 ? '#faad14' : '#ff4d4f')}};"></view>
           </view>
           <text class="progress-text">{{item.percentage}}%</text>
         </view>

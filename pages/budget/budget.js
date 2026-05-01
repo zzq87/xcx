@@ -87,30 +87,26 @@ Page({
     });
   },
 
-  // 加载预算数据
-  loadBudgets() {
-    const budgets = wx.getStorageSync('budgets') || {};
-    const monthBudgets = budgets[this.data.currentMonth] || [];
+   // 加载预算数据
+   loadBudgets() {
+     const budgets = wx.getStorageSync('budgets') || {};
+     const month = this.data.currentMonth || '';
+     const monthBudgets = budgets[month] || [];
 
-    // 计算预算使用情况
-    const updatedBudgets = monthBudgets.map(budget => {
-      // 确保budget.category和budget.subcategory是字符串类型
-      const category = budget.category || '';
-      const subcategory = budget.subcategory || '';
+     // 计算预算使用情况
+     const updatedBudgets = monthBudgets.map(budget => {
+       const category = budget.category || '';
+       const subcategory = budget.subcategory || '';
+       
+       const spent = this.calculateSpent(category, subcategory);
+       const amount = parseFloat(budget.amount) || 0;
+       const validSpent = parseFloat(spent) || 0;
       
-      // 计算已使用金额
-      const spent = this.calculateSpent(category, subcategory);
-      
-      // 确保amount是有效的正数，并且不为0
-      const amount = Math.max(parseFloat(budget.amount) || 0, 0);
-      // 确保spent是有效的正数，并且不大于amount
-      const validSpent = Math.min(Math.max(parseFloat(spent) || 0, 0), amount);
-      
-      // 计算进度百分比，确保在0-100之间
-      let percentage = 0;
-      if (amount > 0) {
-        percentage = Math.min(Math.max(Math.round((validSpent / amount) * 100), 0), 100);
-      }
+     // 计算进度百分比
+     let percentage = 0;
+     if (amount > 0) {
+       percentage = Math.min(Math.max(Math.round((validSpent / amount) * 100), 0), 100);
+     }
       
       return {
         ...budget,
@@ -126,54 +122,48 @@ Page({
     });
   },
 
-  // 计算已使用金额
-  calculateSpent(category, subcategory) {
-    const records = wx.getStorageSync('records') || [];
-    const currentMonth = this.data.currentMonth;
+   // 计算已使用金额
+   calculateSpent(category, subcategory) {
+     const records = wx.getStorageSync('records') || [];
+     const month = this.data.currentMonth || '';
 
-    let spent = 0;
-    // 确保 category 是字符串类型
-    const targetCategory = category || '';
-    // 确保 subcategory 是字符串类型
-    const targetSubcategory = subcategory || '';
+     let spent = 0;
+     const targetCategory = category || '';
+     const targetSubcategory = subcategory || '';
     
     // 遍历记录，只计算当前分类和子分类的支出
-    for (let i = 0; i < records.length; i++) {
-      const record = records[i];
-      // 跳过无效记录
-      if (!record || !record.date || !record.category || !record.type) continue;
-      // 检查是否是当前月份的记录
-      if (!record.date.startsWith(currentMonth)) continue;
-      // 检查是否是支出
-      if (record.type !== '支出') continue;
-      // 检查分类是否匹配
-      if (record.category !== targetCategory) continue;
+      for (let i = 0; i < records.length; i++) {
+        const record = records[i];
+        // 跳过无效记录
+        if (!record || !record.date || !record.category || !record.type) continue;
+        // 检查是否是当前月份的记录
+        if (!record.date || !record.date.startsWith(month)) continue;
+        // 检查是否是支出
+        if (record.type !== '支出') continue;
+        // 检查分类是否匹配
+        if (record.category !== targetCategory) continue;
       
-      // 检查子分类是否匹配
-      // 简化子分类匹配逻辑，只检查当前分类和子分类的支出
-      // 避免所有支出都被计算到当前预算中
-      let isRelevant = false;
-      if (!targetSubcategory) {
-        // 如果预算没有设置子分类，只匹配没有子分类的记录
-        isRelevant = !record.subcategory;
-      } else {
-        // 如果预算设置了子分类，检查记录的子分类是否包含该子分类
-        // 只计算当前子分类的支出
-        isRelevant = record.subcategory && (record.subcategory === targetSubcategory || record.subcategory.includes(targetSubcategory));
-      }
-      
-      if (!isRelevant) continue;
-      
-      // 确保 record.amount 是有效的数字
-      const recordAmount = parseFloat(record.amount) || 0;
-      // 只累加正数的支出金额
-      if (recordAmount > 0) {
-        spent += recordAmount;
-      }
-    }
+       // 检查子分类是否匹配
+       let isRelevant = false;
+       if (!targetSubcategory) {
+         // 如果预算没有设置子分类，只匹配没有子分类的记录
+         isRelevant = !record.subcategory;
+       } else {
+         // 如果预算设置了子分类，检查记录的子分类是否包含该子分类
+         isRelevant = record.subcategory && (record.subcategory === targetSubcategory || record.subcategory.includes(targetSubcategory));
+       }
+       
+       if (!isRelevant) continue;
+       
+       // 只累加正数的支出金额
+     const recordAmount = parseFloat(record.amount) || 0;
+     if (recordAmount > 0) {
+       spent += recordAmount;
+     }
+     }
 
-    return spent;
-  },
+     return spent > 0 ? spent : 0;
+   },
 
   // 显示添加预算对话框
   showAddBudgetDialog() {
@@ -223,18 +213,27 @@ Page({
     const category = this.data.categoryData[this.data.categoryIndex];
     const subcategory = category.subcategories[this.data.subcategoryIndex];
 
-    if (!category || !this.data.newBudget.amount) {
-      wx.showToast({
-        title: '请选择分类和输入金额',
-        icon: 'none'
-      });
-      return;
-    }
+     if (!category) {
+       wx.showToast({
+         title: '请选择分类',
+         icon: 'none'
+       });
+       return;
+     }
+     
+     const amount = typeof this.data.newBudget.amount === 'string' ? parseFloat(this.data.newBudget.amount) : (this.data.newBudget.amount || 0);
+     if (!amount) {
+       wx.showToast({
+         title: '请输入有效金额',
+         icon: 'none'
+       });
+       return;
+     }
 
     const newBudget = {
       category: category.name,
       subcategory: subcategory ? subcategory.name : '',
-      amount: parseFloat(this.data.newBudget.amount) || 0,
+       amount: amount,
       spent: 0
     };
 

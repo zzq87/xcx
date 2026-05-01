@@ -32,11 +32,10 @@ Page({
     const today = `${year}-${month}-${day}`;
     
     this.setData({
-      currentDate: today,
-      startDate: today,
-      endDate: today,
-      currentMonth: `${year}-${month}` // 添加当前月份属性
-    });
+       currentDate: today,
+       startDate: today,
+       endDate: today
+     });
   },
   
   // 开始日期变化
@@ -241,7 +240,8 @@ Page({
       
       const canvas = res[0].node;
       const ctx = canvas.getContext('2d');
-      const dpr = wx.getSystemInfoSync().pixelRatio;
+      const systemInfo = wx.getSystemInfoSync();
+      const dpr = systemInfo.pixelRatio;
       canvas.width = res[0].width * dpr;
       canvas.height = res[0].height * dpr;
       ctx.scale(dpr, dpr);
@@ -381,7 +381,8 @@ Page({
       
       const canvas = res[0].node;
       const ctx = canvas.getContext('2d');
-      const dpr = wx.getSystemInfoSync().pixelRatio;
+      const systemInfo = wx.getSystemInfoSync();
+      const dpr = systemInfo.pixelRatio;
       canvas.width = res[0].width * dpr;
       canvas.height = res[0].height * dpr;
       ctx.scale(dpr, dpr);
@@ -496,8 +497,8 @@ Page({
     // 按月份筛选数据
     const currentMonth = this.data.currentMonth;
     const monthRecords = records.filter(record => {
-      return record.date.startsWith(currentMonth);
-    });
+       return record.date && record.date.startsWith(currentMonth);
+     });
     
     if (monthRecords.length === 0) {
       wx.showToast({
@@ -510,13 +511,13 @@ Page({
     // 构建CSV内容
     let csvContent = '日期,时间,类型,分类,子分类,账户,金额,备注\n';
     
-    monthRecords.forEach(record => {
-      // 转义特殊字符，同时确保字段存在
-      const date = this.escapeCsvField(record.date || '');// 使用空字符串替代undefined
-      const time = this.escapeCsvField(record.time || '');
-      const type = this.escapeCsvField(record.type || '');
-      const category = this.escapeCsvField(record.category || '');
-      const subcategory = this.escapeCsvField(record.subcategory || '');
+     monthRecords.forEach(record => {
+       // 转义特殊字符，同时确保字段存在
+       const date = this.escapeCsvField(record.date || '0000-00-00');
+       const time = this.escapeCsvField(record.time || '00:00');
+       const type = this.escapeCsvField(record.type || '');
+       const category = this.escapeCsvField(record.category || '');
+       const subcategory = this.escapeCsvField(record.subcategory || '');
       
       // 获取账户信息
       let accountInfo = '';
@@ -584,13 +585,13 @@ Page({
     }
   },
 
-  // 转义CSV字段中的特殊字符
-  escapeCsvField(field) {
-    field = String(field);
-    // 如果字段包含逗号、双引号或换行符，则用双引号包围，并将双引号转义为两个双引号
-    if (field.includes(',') || field.includes('"') || field.includes('\n') || field.includes('\r')) {
-      return `"${field.replace(/"/g, '""')}"`;
-    }
-    return field;
-  }
+   // 转义CSV字段中的特殊字符
+   escapeCsvField(field) {
+     field = String(field || '');
+     // 如果字段包含逗号、双引号或换行符，则用双引号包围，并将双引号转义为两个双引号
+     if (field.includes(',') || field.includes('"') || field.includes('\n') || field.includes('\r')) {
+       return `"${field.replace(/"/g, '""')}"`;
+     }
+     return field;
+   }
 });

@@ -15,15 +15,15 @@
     </view>
 
     <view class="category-list">
-      <block wx:for="{{currentCategories}}" wx:key="id">
-        <view class="category-item">
-          <view class="category-info">
-            <view class="category-name-wrapper" bindtap="toggleSubcategories" data-id="{{item.id}}">
-              <text class="category-icon">{{item.icon}}</text>
-              <text class="category-name">{{item.name}}</text>
-              <text class="subcategory-toggle">{{item.subcategories.length > 0 ? (item.expanded ? '▼' : '▶') : ''}}</text>
-            </view>
-          </view>
+       <block wx:for="{{currentCategories}}" wx:key="id">
+         <view class="category-item">
+           <view class="category-info">
+             <view class="category-name-wrapper" bindtap="toggleSubcategories" data-id="{{item.id}}" bindtouchstart="stopPropagation">
+               <text class="category-icon">{{item.icon}}</text>
+               <text class="category-name">{{item.name}}</text>
+               <text class="subcategory-toggle">{{item.subcategories.length > 0 ? (item.expanded ? '▼' : '▶') : ''}}</text>
+             </view>
+           </view>
           <view class="category-actions">
             <view class="action-btn edit" bindtap="editCategory" data-id="{{item.id}}">
               <text class="action-text">编辑</text>

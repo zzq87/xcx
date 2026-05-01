@@ -46,42 +46,84 @@
 
       <view class="input-item">
         <text class="label">账户</text>
-        <view class="category-grid">
-          <!-- 所有账户放在一起显示 -->
-          <block wx:for="{{allAccounts}}" wx:key="id">
-            <view class="category-item {{selectedAccountId == item.id ? 'selected' : ''}}" bindtap="selectAccount" data-id="{{item.id}}">
-              <text class="category-icon">{{item.icon}}</text>
-              <text class="category-name">{{item.name}}</text>
-            </view>
-          </block>
+        <view class="category-selector" bindtap="showAccountSelector">
+          <text class="category-text">{{selectedAccountName || '请选择账户'}}</text>
+          <text class="arrow">▼</text>
         </view>
       </view>
 
       <view class="input-item">
         <text class="label">分类</text>
-        <view class="category-grid">
-          <block wx:for="{{categoryData}}" wx:key="id">
-            <view class="category-item {{selectedCategoryId === item.id ? 'selected' : ''}}" bindtap="selectCategory" data-index="{{index}}" data-id="{{item.id}}">
-              <text class="category-icon">{{item.icon}}</text>
-              <text class="category-name">{{item.name}}</text>
-            </view>
-          </block>
+        <view class="category-selector" bindtap="showCategorySelector">
+          <text class="category-text">{{selectedCategoryName || '请选择分类'}}</text>
+          <text class="arrow">▼</text>
         </view>
       </view>
 
       <view class="input-item" wx:if="{{subcategories.length > 0}}">
         <text class="label">子分类</text>
-        <view class="category-grid subcategory-grid">
-          <block wx:for="{{categoryData[categoryIndex].subcategories}}" wx:key="id">
-            <view class="category-item {{selectedSubcategoryId === item.id ? 'selected' : ''}}" bindtap="selectSubcategory" data-index="{{index}}" data-id="{{item.id}}">
-              <text class="category-icon">{{item.icon}}</text>
-              <text class="category-name">{{item.name}}</text>
-            </view>
-          </block>
+        <view class="category-selector" bindtap="showSubcategorySelector">
+          <text class="category-text">{{selectedSubcategoryName || '请选择子分类'}}</text>
+          <text class="arrow">▼</text>
         </view>
       </view>
 
       <view class="btn" bindtap="addRecord">添加记录</view>
+    </view>
+    
+    <!-- 账户选择弹窗 -->
+    <view class="selector-modal" wx:if="{{showAccountSelectorModal}}" bindtap="hideAccountSelector">
+      <view class="selector-content" bindtap="stopPropagation">
+        <view class="selector-header">
+          <text class="selector-title">选择账户</text>
+          <text class="close-btn" bindtap="hideAccountSelector">×</text>
+        </view>
+        <scroll-view class="selector-list" scroll-y="true">
+          <block wx:for="{{allAccounts}}" wx:key="id">
+            <view class="selector-item" bindtap="selectAccount" data-id="{{item.id}}">
+              <text class="selector-icon">{{item.icon}}</text>
+              <text class="selector-name">{{item.name}}</text>
+              <text class="selector-balance">¥{{item.balance}}</text>
+            </view>
+          </block>
+        </scroll-view>
+      </view>
+    </view>
+    
+    <!-- 分类选择弹窗 -->
+    <view class="selector-modal" wx:if="{{showCategorySelectorModal}}" bindtap="hideCategorySelector">
+      <view class="selector-content" bindtap="stopPropagation">
+        <view class="selector-header">
+          <text class="selector-title">选择分类</text>
+          <text class="close-btn" bindtap="hideCategorySelector">×</text>
+        </view>
+        <scroll-view class="selector-list" scroll-y="true">
+          <block wx:for="{{categoryData}}" wx:key="id">
+            <view class="selector-item" bindtap="selectCategory" data-index="{{index}}" data-id="{{item.id}}">
+              <text class="selector-icon">{{item.icon}}</text>
+              <text class="selector-name">{{item.name}}</text>
+            </view>
+          </block>
+        </scroll-view>
+      </view>
+    </view>
+    
+    <!-- 子分类选择弹窗 -->
+    <view class="selector-modal" wx:if="{{showSubcategorySelectorModal}}" bindtap="hideSubcategorySelector">
+      <view class="selector-content" bindtap="stopPropagation">
+        <view class="selector-header">
+          <text class="selector-title">选择子分类</text>
+          <text class="close-btn" bindtap="hideSubcategorySelector">×</text>
+        </view>
+        <scroll-view class="selector-list" scroll-y="true">
+          <block wx:for="{{categoryData[categoryIndex].subcategories}}" wx:key="id">
+            <view class="selector-item" bindtap="selectSubcategory" data-index="{{index}}" data-id="{{item.id}}">
+              <text class="selector-icon">{{item.icon}}</text>
+              <text class="selector-name">{{item.name}}</text>
+            </view>
+          </block>
+        </scroll-view>
+      </view>
     </view>
 
     <view class="records-section">
@@ -175,17 +217,17 @@
         </view>
       </view>
       
-      <view class="input-item" wx:if="{{subcategories.length > 0}}">
-        <text class="label">子分类</text>
-        <view class="category-grid subcategory-grid">
-          <block wx:for="{{categoryData[0].subcategories}}" wx:key="id">
-            <view class="category-item {{editRecord.selectedSubcategoryId === item.id ? 'selected' : ''}}" bindtap="onEditSubcategoryChange" data-index="{{index}}">
-              <text class="category-icon">{{item.icon}}</text>
-              <text class="category-name">{{item.name}}</text>
-            </view>
-          </block>
-        </view>
-      </view>
+       <view class="input-item" wx:if="{{subcategories.length > 0}}">
+         <text class="label">子分类</text>
+         <view class="category-grid subcategory-grid">
+           <block wx:for="{{categoryData[categoryIndex].subcategories}}" wx:key="id">
+             <view class="category-item {{editRecord.selectedSubcategoryId === item.id ? 'selected' : ''}}" bindtap="onEditSubcategoryChange" data-index="{{index}}">
+               <text class="category-icon">{{item.icon}}</text>
+               <text class="category-name">{{item.name}}</text>
+             </view>
+           </block>
+         </view>
+       </view>
       
       <view class="dialog-buttons">
         <view class="dialog-btn cancel" bindtap="hideEditRecordDialog">

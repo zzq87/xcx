@@ -9,15 +9,25 @@ Page({
     typeIndex: 0,
     categories: [],
     categoryIndex: 0,
+    categoryData: [],
     subcategories: [],
     subcategoryIndex: 0,
     selectedCategoryId: null,
     selectedSubcategoryId: null,
+    selectedAccountName: '',
+    selectedCategoryName: '',
+    selectedSubcategoryName: '',
     note: '',
-    todayRecords: [],
-    accounts: [],
-    allAccounts: [],
-    selectedAccountId: null,
+       todayRecords: [],
+       accounts: [],
+       allAccounts: [],
+       categorizedAccounts: [],
+       accountCategories: [],
+       selectedAccountId: null,
+    // 选择器相关
+    showAccountSelectorModal: false,
+    showCategorySelectorModal: false,
+    showSubcategorySelectorModal: false,
     // 编辑记录相关
     showEditRecordDialog: false,
     editRecord: null,
@@ -52,76 +62,71 @@ Page({
     const type = this.data.types[this.data.typeIndex];
     const categoryType = type === '收入' ? 'income' : 'expense';
     
+    console.log('loadCategories - raw categories:', categories);
+    
     let typeCategories = [];
     let categoryData = [];
     
-    // 确保分类数据格式正确，包含subcategories和icon属性
-    if (categories) {
-      // 确保旧数据兼容，为每个分类添加subcategories和icon属性
-      categories.income = categories.income.map(cat => {
-        return { 
-          ...cat, 
-          subcategories: (cat.subcategories || []).map(subcat => ({
-            ...subcat,
-            icon: subcat.icon || '📌'
-          })),
-          icon: cat.icon || '💰'
-        };
-      });
-      categories.expense = categories.expense.map(cat => {
-        return { 
-          ...cat, 
-          subcategories: (cat.subcategories || []).map(subcat => ({
-            ...subcat,
-            icon: subcat.icon || '📌'
-          })),
-          icon: cat.icon || '💸'
-        };
-      });
-      // 保存更新后的数据
+    // 确保分类数据格式正确
+    if (categories && categories.income && categories.expense) {
+      // 确保旧数据兼容
+      categories.income = categories.income.map(cat => ({
+        ...cat,
+        subcategories: (cat.subcategories || []).map(subcat => ({
+          ...subcat,
+          icon: subcat.icon || '📌'
+        })),
+        icon: cat.icon || '💰'
+      }));
+      categories.expense = categories.expense.map(cat => ({
+        ...cat,
+        subcategories: (cat.subcategories || []).map(subcat => ({
+          ...subcat,
+          icon: subcat.icon || '📌'
+        })),
+        icon: cat.icon || '💸'
+      }));
+      
       wx.setStorageSync('categories', categories);
       
       typeCategories = categories[categoryType].map(cat => cat.name);
-      categoryData = categories[categoryType];
+      categoryData = categories[categoryType] || [];
     } else {
-      // 默认分类（统一emoji图标风格）
-    const defaultCategories = {
-      income: [
-        { id: 1, name: '工资', subcategories: [], icon: '💼' },
-        { id: 2, name: '奖金', subcategories: [], icon: '🏆' },
-        { id: 3, name: '其他收入', subcategories: [], icon: '💰' }
-      ],
-      expense: [
-        { id: 4, name: '餐饮', subcategories: [
-          { id: 11, name: '早餐', icon: '🍳' },
-          { id: 12, name: '午餐', icon: '🍜' },
-          { id: 13, name: '晚餐', icon: '🍽️' },
-          { id: 14, name: '水果', icon: '🍇' },
-          { id: 15, name: '零食', icon: '🍬' },
-          { id: 16, name: '饮料', icon: '🥤' }
-        ], icon: '🍴' },
-        { id: 5, name: '交通', subcategories: [], icon: '🚗' },
-        { id: 6, name: '购物', subcategories: [], icon: '🛒' },
-        { id: 7, name: '娱乐', subcategories: [], icon: '🎬' },
-        { id: 8, name: '医疗', subcategories: [], icon: '🏥' },
-        { id: 9, name: '教育', subcategories: [], icon: '📖' },
-        { id: 10, name: '其他支出', subcategories: [], icon: '💳' }
-      ]
-    };
+      // 默认分类
+      const defaultCategories = {
+        income: [
+          { id: 1, name: '工资', subcategories: [], icon: '💼' },
+          { id: 2, name: '奖金', subcategories: [], icon: '🏆' },
+          { id: 3, name: '其他收入', subcategories: [], icon: '💰' }
+        ],
+        expense: [
+          { id: 4, name: '餐饮', subcategories: [
+            { id: 11, name: '早餐', icon: '🍳' },
+            { id: 12, name: '午餐', icon: '🍜' },
+            { id: 13, name: '晚餐', icon: '🍽️' },
+            { id: 14, name: '水果', icon: '🍇' },
+            { id: 15, name: '零食', icon: '🍬' },
+            { id: 16, name: '饮料', icon: '🥤' }
+          ], icon: '🍴' },
+          { id: 5, name: '交通', subcategories: [], icon: '🚗' },
+          { id: 6, name: '购物', subcategories: [], icon: '🛒' },
+          { id: 7, name: '娱乐', subcategories: [], icon: '🎬' },
+          { id: 8, name: '医疗', subcategories: [], icon: '🏥' },
+          { id: 9, name: '教育', subcategories: [], icon: '📖' },
+          { id: 10, name: '其他支出', subcategories: [], icon: '💳' }
+        ]
+      };
       
-      // 保存默认数据到本地存储
       wx.setStorageSync('categories', defaultCategories);
-      
-      // 更新categories变量
       categories = defaultCategories;
       
-      // 设置当前类型的分类数据
       typeCategories = categories[categoryType].map(cat => cat.name);
-      categoryData = categories[categoryType];
+      categoryData = categories[categoryType] || [];
     }
     
-    // 构建包含图标的分类数组
     const categoriesWithIcons = categories[categoryType].map(cat => `${cat.icon} ${cat.name}`);
+    
+    console.log('loadCategories - result:', { categoryType, categoryDataLength: categoryData.length, categoryData });
     
     this.setData({
       categories: categoriesWithIcons,
@@ -129,7 +134,6 @@ Page({
       categoryData
     });
     
-    // 加载第一个分类的子分类
     this.loadSubcategories(0);
   },
 
@@ -142,7 +146,9 @@ Page({
       subcategories,
       subcategoryIndex: 0,
       selectedCategoryId: category ? category.id : null,
-      selectedSubcategoryId: category && category.subcategories.length > 0 ? category.subcategories[0].id : null
+      selectedSubcategoryId: category && category.subcategories.length > 0 ? category.subcategories[0].id : null,
+      // 同步更新显示的名称
+      selectedCategoryName: category ? category.name : ''
     });
   },
   
@@ -283,12 +289,14 @@ Page({
       categorizedAccounts[category] = allAccounts.filter(acc => acc.category === category);
     });
     
-    this.setData({
-      allAccounts,
-      categorizedAccounts,
-      accountCategories: accountCategoryList
-    });
-  },
+     this.setData({
+       allAccounts,
+       categorizedAccounts,
+       accountCategories: accountCategoryList
+     });
+     
+     console.log('loadAccounts:', { allAccounts, accounts });
+   },
   
   // 确保账户类型正确
   ensureAccountTypes(accounts) {
@@ -318,33 +326,152 @@ Page({
     };
   },
 
-  // 选择分类
-  selectCategory(e) {
-    const index = e.currentTarget.dataset.index;
+  // 显示分类选择器
+  showCategorySelector() {
     this.setData({
-      categoryIndex: index
-    });
-    // 加载所选分类的子分类
-    this.loadSubcategories(index);
-  },
-
-  // 选择子分类
-  selectSubcategory(e) {
-    const index = e.currentTarget.dataset.index;
-    const subcategoryId = e.currentTarget.dataset.id;
-    this.setData({
-      subcategoryIndex: index,
-      selectedSubcategoryId: subcategoryId
+      showCategorySelectorModal: true
     });
   },
   
-  // 选择账户
-  selectAccount(e) {
-    const accountId = e.currentTarget.dataset.id;
+  // 隐藏分类选择器
+  hideCategorySelector() {
     this.setData({
-      selectedAccountId: accountId
+      showCategorySelectorModal: false
     });
   },
+  
+  // 选择分类
+  selectCategory(e) {
+    const index = Number(e.currentTarget.dataset.index);
+    const categoryId = Number(e.currentTarget.dataset.id);
+    const category = this.data.categoryData[index];
+    
+    this.setData({
+      categoryIndex: index,
+      selectedCategoryId: categoryId,
+      selectedCategoryName: category ? category.name : '', // 直接保存名称
+      showCategorySelectorModal: false
+    });
+    this.loadSubcategories(index);
+  },
+   
+    // 获取分类名称
+    getCategoryName(categoryId) {
+      if (!this.data.categoryData || this.data.categoryData.length === 0) {
+        return '未加载';
+      }
+      const category = this.data.categoryData.find(cat => cat.id == categoryId);
+      return category ? category.name : '未知分类';
+    },
+   
+   // 获取分类ID
+   getCategoryIndex(categoryId) {
+     return this.data.categoryData.findIndex(cat => cat.id === categoryId);
+   },
+
+  // 显示子分类选择器
+  showSubcategorySelector() {
+    this.setData({
+      showSubcategorySelectorModal: true
+    });
+  },
+  
+  // 隐藏子分类选择器
+  hideSubcategorySelector() {
+    this.setData({
+      showSubcategorySelectorModal: false
+    });
+  },
+  
+   // 选择子分类
+   selectSubcategory(e) {
+     const index = Number(e.currentTarget.dataset.index);
+     const subcategoryId = Number(e.currentTarget.dataset.id);
+     const category = this.data.categoryData[this.data.categoryIndex];
+     const subcategory = category ? category.subcategories[index] : null;
+     
+     this.setData({
+       subcategoryIndex: index,
+       selectedSubcategoryId: subcategoryId,
+       selectedSubcategoryName: subcategory ? subcategory.name : '', // 直接保存名称
+       showSubcategorySelectorModal: false
+     });
+   },
+  
+  // 获取子分类名称
+  getSubcategoryName(subcategoryId) {
+    // 使用宽松比较
+    const id = subcategoryId;
+    
+    // 遍历所有分类，查找包含指定子分类的分类
+    for (let i = 0; i < this.data.categoryData.length; i++) {
+      const category = this.data.categoryData[i];
+      if (category && category.subcategories) {
+        const subcategory = category.subcategories.find(sub => sub.id == id);
+        if (subcategory) {
+          return subcategory.name;
+        }
+      }
+    }
+    
+    return '未知子分类';
+  },
+  
+  // 阻止事件冒泡
+  stopPropagation() {
+    // 此函数用于阻止点击弹窗内容时触发背景关闭事件
+  },
+  
+  // 显示账户选择器
+  showAccountSelector() {
+    this.setData({
+      showAccountSelectorModal: true
+    });
+  },
+  
+  // 隐藏账户选择器
+  hideAccountSelector() {
+    this.setData({
+      showAccountSelectorModal: false
+    });
+  },
+  
+    // 选择账户
+    selectAccount(e) {
+      // 强制转换为数字
+      const accountId = Number(e.currentTarget.dataset.id);
+      const account = this.data.allAccounts.find(acc => acc.id == accountId);
+      
+      this.setData({
+        selectedAccountId: accountId,
+        selectedAccountName: account ? account.name : '', // 直接保存名称
+        showAccountSelectorModal: false
+      });
+    },
+  
+    // 获取账户名称
+    getAccountName(accountId) {
+      console.log('getAccountName called with:', accountId);
+      if (accountId === null || accountId === undefined || accountId === '') {
+        return '请选择账户';
+      }
+      if (!this.data.allAccounts || this.data.allAccounts.length === 0) {
+        return '未加载';
+      }
+      
+      // 打印前几个账户的ID和类型以便排查
+      console.log('Account 0 ID:', this.data.allAccounts[0]?.id, typeof this.data.allAccounts[0]?.id);
+      
+      const account = this.data.allAccounts.find(acc => {
+        // 严格打印每次比较
+        return acc.id == accountId;
+      });
+      
+      if (account) {
+        return account.name;
+      }
+      return '未找到(ID:' + accountId + ')';
+    },
 
   // 金额输入事件
   onAmountInput(e) {
@@ -373,8 +500,12 @@ Page({
     this.setData({
       typeIndex: parseInt(index)
     });
-    // 切换类型后重新加载分类
+    // 切换类型后重新加载分类（会自动选中第一个并更新名称）
     this.loadCategories();
+    // 重置子分类显示
+    this.setData({
+      selectedSubcategoryName: ''
+    });
   },
 
   // 分类选择事件
@@ -430,7 +561,7 @@ Page({
       id: Date.now(),
       date: this.data.currentDate,
       time: this.data.currentTime, // 使用选择的时间，而不是实时时间
-      amount: parseFloat(this.data.amount),
+       amount: parseFloat(this.data.amount),
       type: this.data.types[this.data.typeIndex],
       category: category,
       subcategory: subcategory,
@@ -514,8 +645,8 @@ Page({
       return;
     }
     
-    // 计算新余额
-    let newBalance = account.balance;
+     // 计算新余额
+     let newBalance = account.balance || 0;
     if (isIncome) {
       // 收入：增加余额
       newBalance += amount;
@@ -633,30 +764,30 @@ Page({
     this.loadCategories();
   },
 
-  // 编辑记录分类选择
-  onEditCategoryChange(e) {
-    const categoryIndex = e.detail.value;
-    const category = this.data.categoryData[categoryIndex];
-    
-    this.setData({
-      'editRecord.category': category.name,
-      'editRecord.selectedCategoryId': category.id
-    });
-    
+   // 编辑记录分类选择
+   onEditCategoryChange(e) {
+     const categoryIndex = e.detail.value;
+     const category = this.data.categoryData[categoryIndex];
+     
+     this.setData({
+       'editRecord.category': category.name,
+       'editRecord.selectedCategoryId': category.id
+     });
     // 加载子分类
     this.loadSubcategories(categoryIndex);
   },
 
-  // 编辑记录子分类选择
-  onEditSubcategoryChange(e) {
-    const subcategoryIndex = e.detail.value;
-    const subcategory = this.data.subcategories[subcategoryIndex];
-    
-    this.setData({
-      'editRecord.subcategory': subcategory.name,
-      'editRecord.selectedSubcategoryId': subcategory.id
-    });
-  },
+   // 编辑记录子分类选择
+   onEditSubcategoryChange(e) {
+     const subcategoryIndex = e.detail.value;
+     const categoryIndex = this.getCategoryIndex(this.data.editRecord.selectedCategoryId);
+     const subcategory = this.data.categoryData[categoryIndex].subcategories[subcategoryIndex];
+     
+     this.setData({
+       'editRecord.subcategory': subcategory ? subcategory.name : '',
+       'editRecord.selectedSubcategoryId': subcategory ? subcategory.id : null
+     });
+   },
 
   // 编辑记录账户选择
   onEditAccountChange(e) {
@@ -680,7 +811,8 @@ Page({
     const { editRecord, originalRecord } = this.data;
     
     // 验证金额
-    if (!editRecord.amount || editRecord.amount <= 0) {
+    const amount = typeof editRecord.amount === 'string' ? parseFloat(editRecord.amount) : (editRecord.amount || 0);
+    if (amount <= 0) {
       wx.showToast({
         title: '请输入有效金额',
         icon: 'none'
@@ -714,7 +846,7 @@ Page({
       if (record.id === editRecord.id) {
         return {
           ...record,
-          amount: editRecord.amount,
+           amount: amount,
           type: editRecord.type,
           category: editRecord.category,
           subcategory: editRecord.subcategory,
@@ -782,8 +914,8 @@ Page({
       return;
     }
     
-    // 恢复余额（与原始更新相反）
-    let newBalance = account.balance;
+     // 恢复余额（与原始更新相反）
+     let newBalance = account.balance || 0;
     if (isIncome) {
       // 收入：恢复时减少余额
       newBalance -= amount;
