@@ -116,7 +116,6 @@ Page({
 
   onLoad() {
     this.loadCategories();
-    this.switchTab({ currentTarget: { dataset: { tab: 'income' } } });
   },
 
   // 加载分类数据
@@ -124,7 +123,7 @@ Page({
     let categories = wx.getStorageSync('categories');
     
     // 如果没有分类数据，初始化默认分类
-    if (!categories) {
+    if (!categories || !categories.income || !categories.expense) {
       categories = {
         income: [
           { id: 1, name: '工资', subcategories: [], expanded: false, icon: '💰' },
@@ -155,7 +154,7 @@ Page({
         return {
           ...cat,
           id: Number(cat.id),
-          expanded: false,
+          expanded: cat.expanded || false, // 保留展开状态
           icon: getCategoryIcon(cat.name, 'income'),
           subcategories: (cat.subcategories || []).map(subcat => ({
             ...subcat,
@@ -168,7 +167,7 @@ Page({
         return {
           ...cat,
           id: Number(cat.id),
-          expanded: false,
+          expanded: cat.expanded || false, // 保留展开状态
           icon: getCategoryIcon(cat.name, 'expense'),
           subcategories: (cat.subcategories || []).map(subcat => ({
             ...subcat,
@@ -181,8 +180,12 @@ Page({
       wx.setStorageSync('categories', categories);
     }
     
+    // 根据当前 activeTab 设置显示的列表
+    const tab = this.data.activeTab || 'income';
     this.setData({
-      categories
+      categories,
+      currentCategories: categories[tab],
+      activeTab: tab
     });
   },
 

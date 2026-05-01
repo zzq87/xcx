@@ -27,63 +27,47 @@
       <text class="total-balance-amount {{totalBalance < 0 ? 'negative' : ''}}">¥{{totalBalance}}</text>
     </view>
 
-    <view class="account-list">
-      <block wx:for="{{currentAccounts}}" wx:key="id">
-        <view class="account-item">
-          <view class="account-info">
-            <view class="account-name-wrapper" bindtap="toggleSubaccounts" data-id="{{item.id}}">
-              <text class="account-icon">{{item.icon}}</text>
-              <text class="account-name">{{item.name}}</text>
-              <text class="subaccount-toggle">{{item.subAccounts && item.subAccounts.length > 0 ? (item.expanded ? '▼' : '▶') : ''}}</text>
-            </view>
-          </view>
-          <view class="account-actions">
-            <view class="account-balance {{(item.subAccounts && item.subAccounts.length > 0 ? item.subAccountsTotalBalance : item.balance) < 0 ? 'negative' : ''}}">
-              ¥{{item.subAccounts && item.subAccounts.length > 0 ? item.subAccountsTotalBalance : item.balance}}
-            </view>
-            <view class="edit-btn" bindtap="showEditAccountDialog" data-id="{{item.id}}">
-              <text class="edit-btn-text">编辑</text>
-            </view>
-            <view class="delete-btn" bindtap="showDeleteConfirmDialog" data-id="{{item.id}}">
-              <text class="delete-btn-text">删除</text>
-            </view>
-          </view>
+    <!-- 按分类显示账户 -->
+    <view class="category-groups">
+      <view class="account-category" wx:for="{{activeCategoryList}}" wx:key="item">
+        <view class="category-header" bindtap="toggleAccountCategory" data-category="{{item}}">
+          <text class="category-name">{{item}}</text>
+          <text class="expand-icon">{{expandedCategories[item] ? '▼' : '▶'}}</text>
         </view>
         
-        <!-- 子账户列表 -->
-        <view class="subaccount-list" wx:if="{{item.expanded}}">
-          <!-- 显示子账户 -->
-          <block wx:if="{{item.subAccounts && item.subAccounts.length > 0}}">
-            <block wx:for="{{item.subAccounts}}" wx:for-item="subacc" wx:key="id">
-              <view class="subaccount-item">
-                <text class="subaccount-icon">{{'  ' + subacc.icon}}</text>
-                <text class="subaccount-name">{{subacc.name}}</text>
-                <view class="subaccount-actions">
-                  <view class="subaccount-balance {{subacc.balance < 0 ? 'negative' : ''}}">
-                    ¥{{subacc.balance}}
-                  </view>
-                  <view class="edit-btn" bindtap="showEditSubAccountDialog" data-accountid="{{subacc.parentId}}" data-subid="{{subacc.id}}" data-type="{{subacc.parentType}}">
-                    <text class="edit-btn-text">编辑</text>
-                  </view>
-                  <view class="delete-btn" bindtap="showDeleteSubAccountConfirmDialog" data-accountid="{{subacc.parentId}}" data-subid="{{subacc.id}}" data-type="{{subacc.parentType}}">
-                    <text class="delete-btn-text">删除</text>
-                  </view>
+        <view class="category-content" wx:if="{{expandedCategories[item]}}">
+          <!-- 账户列表 -->
+          <block wx:for="{{categorizedAccounts[item]}}" wx:for-item="acc" wx:key="id">
+            <view class="account-item">
+              <view class="account-info">
+                <text class="account-icon">{{acc.icon}}</text>
+                <text class="account-name">{{acc.name}}</text>
+              </view>
+              <view class="account-actions">
+                <view class="account-balance {{acc.balance < 0 ? 'negative' : ''}}">
+                  ¥{{acc.balance}}
+                </view>
+                <view class="edit-btn" bindtap="showEditAccountDialog" data-id="{{acc.id}}">
+                  <text class="edit-btn-text">编辑</text>
+                </view>
+                <view class="delete-btn" bindtap="showDeleteConfirmDialog" data-id="{{acc.id}}">
+                  <text class="delete-btn-text">删除</text>
                 </view>
               </view>
-            </block>
+            </view>
           </block>
           
-          <!-- 显示空状态 -->
-          <view wx:else class="empty-subaccounts">
-            <text class="empty-text">暂无子账户</text>
+          <!-- 空状态 -->
+          <view wx:if="{{!categorizedAccounts[item] || categorizedAccounts[item].length === 0}}" class="empty-category">
+            <text class="empty-text">暂无账户</text>
           </view>
-          
-          <!-- 添加子账户按钮（始终显示） -->
-          <view class="add-subaccount-btn" bindtap="showAddSubAccountDialog" data-id="{{item.id}}" data-type="{{activeTab}}">
-            <text class="add-subaccount-btn-text">+ 添加子账户</text>
+
+          <!-- 添加账户按钮 -->
+          <view class="add-account-btn" bindtap="showAddAccountDialog" data-category="{{item}}">
+            <text class="add-btn-text">+ 添加账户</text>
           </view>
         </view>
-      </block>
+      </view>
     </view>
   </view>
 
@@ -155,14 +139,13 @@
       </view>
       
       <view class="dialog-section">
-        <text class="section-label">账户类型</text>
-        <view class="account-type-select">
-          <view class="type-option {{newAccount.type === 'deposit' ? 'selected' : ''}}" bindtap="setAccountType" data-type="deposit">
-            <text class="type-text">存款账户</text>
-          </view>
-          <view class="type-option {{newAccount.type === 'liability' ? 'selected' : ''}}" bindtap="setAccountType" data-type="liability">
-            <text class="type-text">负债账户</text>
-          </view>
+        <text class="section-label">账户分类</text>
+        <view class="category-select">
+          <block wx:for="{{activeCategoryList}}" wx:key="item">
+            <view class="type-option {{newAccount.category === item ? 'selected' : ''}}" bindtap="selectCategory" data-category="{{item}}">
+              <text class="type-text">{{item}}</text>
+            </view>
+          </block>
         </view>
       </view>
       
@@ -203,6 +186,17 @@
         <input class="dialog-input" type="digit" placeholder="请输入当前余额" bindinput="onEditAccountInput" data-field="balance" value="{{editAccount.balance}}" adjust-position="true" />
       </view>
       
+      <view class="dialog-section">
+        <text class="section-label">账户分类</text>
+        <view class="category-select">
+          <block wx:for="{{activeCategoryList}}" wx:key="item">
+            <view class="type-option {{editAccount.category === item ? 'selected' : ''}}" bindtap="selectEditCategory" data-category="{{item}}">
+              <text class="type-text">{{item}}</text>
+            </view>
+          </block>
+        </view>
+      </view>
+
       <view class="dialog-section">
         <text class="section-label">账户图标</text>
         <view class="icon-selector">

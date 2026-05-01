@@ -41,6 +41,16 @@ Page({
     this.loadTodayRecords();
   },
 
+  // 添加 onShow 确保每次从其他页面返回时刷新数据
+  onShow() {
+    // 刷新分类数据（如果在分类管理页面做了修改）
+    this.loadCategories();
+    // 刷新账户数据（如果在账户管理页面做了修改）
+    this.loadAccounts();
+    // 刷新今日记录（可能添加了新记录）
+    this.loadTodayRecords();
+  },
+
   // 初始化当前日期和时间
   initCurrentDate() {
     const date = new Date();
