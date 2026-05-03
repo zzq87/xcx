@@ -1,6 +1,14 @@
 <!--categories.wxml-->
 <view class="container">
   <view class="page-content">
+    <!-- 全局 Banner -->
+    <view class="page-banner">
+      <view class="banner-content">
+        <text class="banner-title">如意记账</text>
+        <text class="banner-subtitle">让每一笔账都有迹可循</text>
+      </view>
+    </view>
+
     <view class="header">
       <text class="title">分类管理</text>
     </view>
@@ -74,10 +82,10 @@
         <input class="dialog-input" placeholder="请输入子分类名称" bindinput="onNewSubcategoryInput" value="{{newSubcategoryName}}" adjust-position="true" />
         <view class="dialog-section">
           <text class="section-label">选择图标</text>
-          <view class="icon-grid">
-            <block wx:for="{{availableIcons}}" wx:key="index">
-              <view class="icon-item {{selectedIcon === item ? 'selected' : ''}}" bindtap="selectIcon" data-icon="{{item}}">
-                <text class="icon">{{item}}</text>
+          <view class="icon-selector">
+            <block wx:for="{{availableIcons}}" wx:key="*this">
+              <view class="icon-option {{selectedIcon === item ? 'selected' : ''}}" bindtap="selectIcon" data-icon="{{item}}">
+                <text class="icon-option-text">{{item}}</text>
               </view>
             </block>
           </view>
@@ -100,10 +108,10 @@
         <input class="dialog-input" placeholder="请输入名称" bindinput="onEditNameInput" value="{{editName}}" adjust-position="true" />
         <view class="dialog-section">
           <text class="section-label">选择图标</text>
-          <view class="icon-grid">
-            <block wx:for="{{availableIcons}}" wx:key="index">
-              <view class="icon-item {{selectedIcon === item ? 'selected' : ''}}" bindtap="selectIcon" data-icon="{{item}}">
-                <text class="icon">{{item}}</text>
+          <view class="icon-selector">
+            <block wx:for="{{availableIcons}}" wx:key="*this">
+              <view class="icon-option {{selectedIcon === item ? 'selected' : ''}}" bindtap="selectIcon" data-icon="{{item}}">
+                <text class="icon-option-text">{{item}}</text>
               </view>
             </block>
           </view>

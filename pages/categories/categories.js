@@ -1,97 +1,7 @@
 // categories.js
-// 分类名称到图标的映射表
-const ICON_MAPPINGS = {
-  income: {
-    '工资': '💼',
-    '奖金': '🏆',
-    '投资': '📈',
-    '利息': '💵',
-    '兼职': '👨‍💻',
-    '礼金': '💝',
-    '报销': '🧾',
-    '补贴': '💰',
-    '红包': '🧧',
-    '其他收入': '📥'
-  },
-  expense: {
-    '餐饮': '🍽️',
-    '交通': '🚕',
-    '购物': '🛍️',
-    '娱乐': '🎭',
-    '医疗': '🏥',
-    '教育': '📚',
-    '房租': '🏠',
-    '水电费': '💧',
-    '通讯费': '📞',
-    '人情往来': '💝',
-    '旅游': '✈️',
-    '健身': '🏃',
-    '美容': '💄',
-    '宠物': '🐶',
-    '其他支出': '📤'
-  },
-  // 子分类图标映射
-  subcategory: {
-    // 餐饮子分类
-    '早餐': '🥐',
-    '午餐': '🍱',
-    '晚餐': '🍲',
-    '水果': '🍎',
-    '零食': '🍪',
-    '饮料': '🥤',
-    '外卖': '📦',
-    '聚餐': '🍽️',
-    // 交通子分类
-    '公交': '🚌',
-    '地铁': '🚇',
-    '打车': '🚕',
-    '加油': '⛽',
-    '停车费': '🅿️',
-    '火车票': '🚂',
-    '飞机票': '✈️',
-    // 购物子分类
-    '衣服': '👕',
-    '鞋子': '👟',
-    '化妆品': '💄',
-    '日用品': '🧺',
-    '电子产品': '💻',
-    '家居用品': '🏠',
-    // 娱乐子分类
-    '电影': '🎬',
-    '游戏': '🎮',
-    '旅游': '🗺️',
-    '健身': '🏃',
-    '聚会': '🎉',
-    // 教育子分类
-    '学费': '🎓',
-    '书籍': '📖',
-    '培训': '👨‍🏫',
-    // 默认图标
-    '默认': '📌'
-  }
-};
-
-// 获取分类对应的图标
-const getCategoryIcon = (name, type) => {
-  if (type === 'income' || type === 'expense') {
-    return ICON_MAPPINGS[type][name] || (type === 'income' ? '💰' : '💸');
-  }
-  return ICON_MAPPINGS.subcategory[name] || ICON_MAPPINGS.subcategory['默认'];
-};
-
-// 可用图标列表
-const AVAILABLE_ICONS = [
-  '💼', '🏆', '📈', '💵', '👨‍💻', '💝', '🧾', '💰', '🧧', '📥',
-  '🍽️', '🚕', '🛍️', '🎭', '🏥', '📚', '🏠', '💧', '📞', '💝',
-  '✈️', '🏃', '💄', '🐶', '📤', '🥐', '🍱', '🍲', '🍎', '🍪',
-  '🥤', '📦', '📦', '🚌', '🚇', '🚕', '⛽', '🅿️', '🚂', '🗺️',
-  '👕', '👟', '💄', '🧺', '💻', '🏠', '🎬', '🏃', '🎉', '🎓',
-  '📖', '👨‍🏫', '📌', '🎁', '📱', '🎮', '🎯', '🎨', '🎵', '🎬',
-  '🎨', '🎯', '🌟', '💎', '🌱', '🔥', '💡', '🔑', '🔒', '❤️',
-  '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '🧡', '🌈', '☀️',
-  '🌙', '⭐', '⚡', '❄️', '💧', '🌊', '🌸', '🌹', '🌻', '🌺'
-
-];
+const { getCategoryIcon } = require('../../utils/util');
+// 从配置文件导入分类图标映射和预设图标列表
+const { CATEGORY_ICONS, PRESET_ICONS } = require('../../config/constants');
 
 Page({
   data: {
@@ -106,7 +16,7 @@ Page({
     selectedIcon: '',
     editingId: null,
     editingCategoryId: null, // 仅用于子分类编辑
-    availableIcons: AVAILABLE_ICONS,
+    availableIcons: PRESET_ICONS, // 使用全局配置的图标库
     categories: {
       income: [],
       expense: []
@@ -149,38 +59,32 @@ Page({
       };
       wx.setStorageSync('categories', categories);
     } else {
-      // 确保旧数据兼容，为每个分类添加subcategories、expanded和icon属性，并确保ID是数字类型
-      categories.income = categories.income.map(cat => {
-        return {
-          ...cat,
-          id: Number(cat.id),
-          expanded: cat.expanded || false, // 保留展开状态
-          icon: getCategoryIcon(cat.name, 'income'),
-          subcategories: (cat.subcategories || []).map(subcat => ({
-            ...subcat,
-            id: Number(subcat.id),
-            icon: getCategoryIcon(subcat.name, 'subcategory')
-          }))
-        };
-      });
-      categories.expense = categories.expense.map(cat => {
-        return {
-          ...cat,
-          id: Number(cat.id),
-          expanded: cat.expanded || false, // 保留展开状态
-          icon: getCategoryIcon(cat.name, 'expense'),
-          subcategories: (cat.subcategories || []).map(subcat => ({
-            ...subcat,
-            id: Number(subcat.id),
-            icon: getCategoryIcon(subcat.name, 'subcategory')
-          }))
-        };
-      });
-      // 保存更新后的数据
+      // 使用工具函数确保数据格式正确，并自动分配图标
+      categories.income = categories.income.map(cat => ({
+        ...cat,
+        id: Number(cat.id),
+        expanded: cat.expanded || false,
+        icon: cat.icon || getCategoryIcon(cat.name, 'income'),
+        subcategories: (cat.subcategories || []).map(subcat => ({
+          ...subcat,
+          id: Number(subcat.id),
+          icon: subcat.icon || getCategoryIcon(subcat.name, 'subcategory')
+        }))
+      }));
+      categories.expense = categories.expense.map(cat => ({
+        ...cat,
+        id: Number(cat.id),
+        expanded: cat.expanded || false,
+        icon: cat.icon || getCategoryIcon(cat.name, 'expense'),
+        subcategories: (cat.subcategories || []).map(subcat => ({
+          ...subcat,
+          id: Number(subcat.id),
+          icon: subcat.icon || getCategoryIcon(subcat.name, 'subcategory')
+        }))
+      }));
       wx.setStorageSync('categories', categories);
     }
     
-    // 根据当前 activeTab 设置显示的列表
     const tab = this.data.activeTab || 'income';
     this.setData({
       categories,

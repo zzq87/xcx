@@ -1,4 +1,6 @@
 // accounts.js
+const { ACCOUNT_GROUPS, ACCOUNT_CATEGORIES, PRESET_ICONS } = require('../../config/constants');
+
 Page({
   data: {
     activeTab: 'deposit',
@@ -22,7 +24,7 @@ Page({
       type: 'deposit',
       balance: 0,
       icon: '💰',
-      category: '现金账户' // 默认分类
+      category: '现金账户'
     },
     showEditAccountDialog: false,
     editAccount: {
@@ -31,21 +33,12 @@ Page({
       balance: 0,
       type: 'deposit',
       icon: '💰',
-      category: '现金账户' // 默认分类
+      category: '现金账户'
     },
     showDeleteConfirmDialog: false,
     accountToDelete: null,
-    // 新增：用于管理分类展开状态
     expandedCategories: {},
-    // 预设图标集合（统一emoji图标风格）
-    presetIcons: [
-      '💰', '💳', '📱', '💬', '🏦', '💵', '💸', '💳', 
-      '💎', '🎁', '📈', '📉', '🏠', '🚗', '✈️', '🍽️',
-      '👔', '💊', '📖', '🎭', '🎨', '🏃', '🎵', '📷',
-      '🎒', '👶', '🐶', '🐱', '🌱', '🔥', '💧', '☀️',
-      '🌟', '🎯', '❤️', '🔑', '🔒', '💡', '⭐', '⚡',
-      '📱', '💼', '🏆', '📤', '📥', '📦', '🗺️', '📞'
-    ]
+    presetIcons: PRESET_ICONS // 引入常量
   },
 
   onLoad() {
@@ -60,8 +53,8 @@ Page({
   loadAccounts() {
     let accounts = wx.getStorageSync('accounts');
     
-    // 定义新的账户分类结构
-    const accountCategories = {
+    // 定义账户分类结构
+    const accountCategoriesMap = {
       '现金账户': ['现金'],
       '虚拟账户': ['支付宝','微信钱包'],
       '储蓄账户': ['银行卡'],
@@ -73,22 +66,20 @@ Page({
     
     // 如果没有账户数据，初始化默认账户
     if (!accounts) {
-      // 默认账户数据（统一emoji图标风格）
       const defaultAccounts = [
-        { id: 1, name: '现金', balance: 0, icon: '💰', category: '现金账户' },
+        { id: 1, name: '现金', balance: 0, icon: '💴', category: '现金账户' },
         { id: 2, name: '银行卡', balance: 0, icon: '💳', category: '储蓄账户' },
-        { id: 3, name: '支付宝', balance: 0, icon: '📱', category: '虚拟账户' },
+        { id: 3, name: '支付宝', balance: 0, icon: '🐜', category: '虚拟账户' },
         { id: 4, name: '微信钱包', balance: 0, icon: '💬', category: '虚拟账户' },
         { id: 5, name: '信用卡', balance: 0, icon: '💳', category: '信用账户' },
-        { id: 6, name: '蚂蚁花呗', balance: 0, icon: '💳', category: '信用账户' },
-        { id: 7, name: '借给他人', balance: 0, icon: '🤝', category: '债权账户' },
+        { id: 6, name: '蚂蚁花呗', balance: 0, icon: '🌸', category: '信用账户' },
+        { id: 7, name: '借给他人', balance: 0, icon: '👤', category: '债权账户' },
         { id: 8, name: '借用他人', balance: 0, icon: '🤝', category: '负债账户' },
         { id: 9, name: '基金账户', balance: 0, icon: '📈', category: '投资账户' },
-        { id: 10, name: '股票账户', balance: 0, icon: '📈', category: '投资账户' },
-        { id: 11, name: '应收款项', balance: 0, icon: '📥', category: '债权账户' },
-        { id: 12, name: '应付款项', balance: 0, icon: '📤', category: '负债账户' }
+        { id: 10, name: '股票账户', balance: 0, icon: '📊', category: '投资账户' },
+        { id: 11, name: '应收款项', balance: 0, icon: '📝', category: '债权账户' },
+        { id: 12, name: '应付款项', balance: 0, icon: '📋', category: '负债账户' }
       ];
-      
       accounts = { accounts: defaultAccounts };
       wx.setStorageSync('accounts', accounts);
     }
@@ -189,29 +180,28 @@ Page({
        '负债账户': []
      };
      
-     // 将账户分配到对应分类
-     allAccounts.forEach(acc => {
-       if (groupedAccounts[acc.category]) {
-         groupedAccounts[acc.category].push(acc);
-       }
-     });
+      // 将账户分配到对应分类
+      allAccounts.forEach(acc => {
+        if (groupedAccounts[acc.category]) {
+          groupedAccounts[acc.category].push(acc);
+        }
+      });
+ 
+      // 使用常量获取当前 Tab 对应的分类列表
+      const activeCategoryList = this.data.activeTab === 'deposit' ? ACCOUNT_GROUPS.deposit : ACCOUNT_GROUPS.liability;
 
-     // 根据当前Tab过滤分类列表 (存款Tab显示前5个，负债Tab显示后2个)
-     const isDeposit = this.data.activeTab === 'deposit';
-     const depositCats = ['现金账户', '虚拟账户', '储蓄账户', '投资账户', '债权账户'];
-     const liabilityCats = ['信用账户', '负债账户'];
-     const activeCategoryList = isDeposit ? depositCats : liabilityCats;
-
-     // 强制更新所有数据
-     this.setData({
-       accounts: accountsByType,
-       allAccounts: allAccounts,
-       currentAccounts: accountsByType[this.data.activeTab || 'deposit'],
-       categorizedAccounts: groupedAccounts, // 新增：分类分组数据
-       activeCategoryList: activeCategoryList, // 新增：当前Tab对应的分类列表
-       totalBalance: total
-     });
-   },
+      // 强制更新所有数据
+      this.setData({
+        accounts: accountsByType,
+        allAccounts: allAccounts,
+        currentAccounts: accountsByType[this.data.activeTab || 'deposit'],
+        categorizedAccounts: groupedAccounts,
+        activeCategoryList,
+        totalBalance: total,
+        // 初始化分类展开状态
+        expandedCategories: ACCOUNT_CATEGORIES.reduce((acc, cur) => ({...acc, [cur]: true}), {})
+      });
+    },
   
   // 确保账户类型正确
   ensureAccountTypes(accounts) {
@@ -242,19 +232,15 @@ Page({
   },
   
   // 切换标签页
-   switchTab(e) {
-     const tab = e.currentTarget.dataset.tab;
-     const isDeposit = tab === 'deposit';
-     const depositCats = ['现金账户', '虚拟账户', '储蓄账户', '投资账户', '债权账户'];
-     const liabilityCats = ['信用账户', '负债账户'];
-     
-     this.setData({
-       currentAccounts: this.data.accounts[tab],
-       activeTab: tab,
-       activeCategoryList: isDeposit ? depositCats : liabilityCats,
-       // Reset expanded state if needed, or keep it
-     });
-   },
+  switchTab(e) {
+    const tab = e.currentTarget.dataset.tab;
+    
+    this.setData({
+      currentAccounts: this.data.accounts[tab],
+      activeTab: tab,
+      activeCategoryList: tab === 'deposit' ? ACCOUNT_GROUPS.deposit : ACCOUNT_GROUPS.liability
+    });
+  },
 
   // 显示转账对话框
   showTransferDialog() {

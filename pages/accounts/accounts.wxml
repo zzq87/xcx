@@ -1,6 +1,14 @@
 <!-- accounts.wxml -->
 <view class="container">
   <view class="page-content">
+    <!-- 全局 Banner -->
+    <view class="page-banner">
+      <view class="banner-content">
+        <text class="banner-title">如意记账</text>
+        <text class="banner-subtitle">让每一笔账都有迹可循</text>
+      </view>
+    </view>
+
     <view class="header">
       <text class="title">账户管理</text>
       <view class="header-actions">

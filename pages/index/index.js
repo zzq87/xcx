@@ -1,4 +1,6 @@
 // index.js
+const { getCurrentDate, getCurrentTime } = require('../../utils/util');
+
 Page({
   data: {
     currentDate: '',
@@ -53,16 +55,9 @@ Page({
 
   // 初始化当前日期和时间
   initCurrentDate() {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    
     this.setData({
-      currentDate: `${year}-${month}-${day}`,
-      currentTime: `${hours}:${minutes}`
+      currentDate: getCurrentDate(),
+      currentTime: getCurrentTime()
     });
   },
 
@@ -71,8 +66,6 @@ Page({
     let categories = wx.getStorageSync('categories');
     const type = this.data.types[this.data.typeIndex];
     const categoryType = type === '收入' ? 'income' : 'expense';
-    
-    console.log('loadCategories - raw categories:', categories);
     
     let typeCategories = [];
     let categoryData = [];
@@ -128,20 +121,17 @@ Page({
       };
       
       wx.setStorageSync('categories', defaultCategories);
-      categories = defaultCategories;
-      
-      typeCategories = categories[categoryType].map(cat => cat.name);
-      categoryData = categories[categoryType] || [];
+      categoryData = defaultCategories[categoryType] || [];
     }
     
-    const categoriesWithIcons = categories[categoryType].map(cat => `${cat.icon} ${cat.name}`);
-    
-    console.log('loadCategories - result:', { categoryType, categoryDataLength: categoryData.length, categoryData });
+    const categoriesWithIcons = categoryData.map(cat => `${cat.icon} ${cat.name}`);
     
     this.setData({
       categories: categoriesWithIcons,
       categoryIndex: 0,
-      categoryData
+      categoryData,
+      selectedCategoryName: categoryData.length > 0 ? categoryData[0].name : '',
+      selectedCategoryId: categoryData.length > 0 ? categoryData[0].id : null
     });
     
     this.loadSubcategories(0);
@@ -545,33 +535,25 @@ Page({
   // 添加记录
   addRecord() {
     if (!this.data.amount) {
-      wx.showToast({
-        title: '请输入金额',
-        icon: 'none'
-      });
+      wx.showToast({ title: '请输入金额', icon: 'none' });
       return;
     }
 
     if (this.data.selectedAccountId === null) {
-      wx.showToast({
-        title: '请选择账户',
-        icon: 'none'
-      });
+      wx.showToast({ title: '请选择账户', icon: 'none' });
       return;
     }
 
     // 提取分类名称
     const category = this.data.categoryData[this.data.categoryIndex].name;
-    
-    // 提取子分类名称
     const categoryData = this.data.categoryData[this.data.categoryIndex];
     const subcategory = categoryData.subcategories.length > 0 ? categoryData.subcategories[this.data.subcategoryIndex].name : '';
     
     const record = {
       id: Date.now(),
       date: this.data.currentDate,
-      time: this.data.currentTime, // 使用选择的时间，而不是实时时间
-       amount: parseFloat(this.data.amount),
+      time: this.data.currentTime,
+      amount: parseFloat(this.data.amount),
       type: this.data.types[this.data.typeIndex],
       category: category,
       subcategory: subcategory,
@@ -579,141 +561,51 @@ Page({
       accountId: this.data.selectedAccountId
     };
 
-    // 更新账户余额并验证
-    const balanceUpdated = this.updateAccountBalance(record);
+    // 使用全局方法更新余额（新增：无旧记录）
+    getApp().processBalanceChange(null, record);
     
-    // 只有余额更新成功才保存记录
-    if (balanceUpdated) {
-      // 保存到本地存储
-      this.saveRecord(record);
-      
-      // 刷新今日记录
-      this.loadTodayRecords();
-      
-      // 清空表单
-      this.setData({
-        amount: '',
-        typeIndex: 0,
-        categoryIndex: 0,
-        note: '',
-        selectedAccountId: null
-      });
-      // 重新加载分类数据，确保与当前类型一致
-      this.loadCategories();
-
-      wx.showToast({
-        title: '添加成功',
-        icon: 'success'
-      });
-    }
-  },
-
-  // 保存记录到本地存储
-  saveRecord(record) {
+    // 保存记录到本地存储
     const records = wx.getStorageSync('records') || [];
     records.push(record);
     wx.setStorageSync('records', records);
-  },
-  
-  // 更新账户余额
-  updateAccountBalance(record) {
-    let accounts = wx.getStorageSync('accounts');
-    if (!accounts) {
-      return;
-    }
+
+    // 清空表单
+    this.setData({
+      amount: '',
+      typeIndex: 0,
+      categoryIndex: 0,
+      note: '',
+      selectedAccountId: null
+    });
     
-    const amount = record.amount;
-    const isIncome = record.type === '收入';
-    const accountId = record.accountId;
-    
-    // 查找账户
-    let account = null;
-    let accountIndex = -1;
-    let isNewStructure = false;
-    
-    if (accounts.accounts) {
-      // 新数据结构：{ accounts: [...] }
-      isNewStructure = true;
-      accountIndex = accounts.accounts.findIndex(acc => acc.id === accountId);
-      if (accountIndex !== -1) {
-        account = accounts.accounts[accountIndex];
-      }
-    } else if (accounts.deposit && accounts.liability) {
-      // 旧数据结构：{ deposit: [...], liability: [...] }
-      let found = false;
-      Object.keys(accounts).forEach(type => {
-        if (found) return;
-        const foundAccount = accounts[type].find(acc => acc.id === accountId);
-        if (foundAccount) {
-          account = foundAccount;
-          found = true;
-        }
-      });
-    }
-    
-    if (!account) {
-      return;
-    }
-    
-     // 计算新余额
-     let newBalance = account.balance || 0;
-    if (isIncome) {
-      // 收入：增加余额
-      newBalance += amount;
-    } else {
-      // 支出：减少余额
-      newBalance -= amount;
-    }
-    
-    // 更新账户余额
-    if (isNewStructure) {
-      // 新数据结构更新
-      accounts.accounts[accountIndex] = { ...account, balance: newBalance };
-    } else {
-      // 旧数据结构更新
-      Object.keys(accounts).forEach(type => {
-        accounts[type] = accounts[type].map(acc => {
-          if (acc.id === accountId) {
-            return { ...acc, balance: newBalance };
-          }
-          return acc;
-        });
-      });
-    }
-    
-    // 保存更新后的账户数据
-    wx.setStorageSync('accounts', accounts);
-    
-    // 更新页面中的账户数据
-    this.loadAccounts();
-    
-    return true;
+    this.loadCategories();
+    this.loadTodayRecords();
+    getApp().refreshAllAccounts(this); // 刷新账户显示
+
+    wx.showToast({ title: '添加成功', icon: 'success' });
   },
 
   // 加载今日记录
   loadTodayRecords() {
     const records = wx.getStorageSync('records') || [];
     const today = this.data.currentDate;
-    const todayRecords = records.filter(record => record.date === today);
+    // Filter records for today
+    const todayRecords = records.filter(record => record && record.date === today);
     
-    // 获取所有账户信息
-    let accounts = wx.getStorageSync('accounts') || { accounts: [] };
-    // 处理不同的账户数据结构
+    // Get all accounts
+    let accountsData = wx.getStorageSync('accounts');
     let allAccounts = [];
-    if (accounts.accounts) {
-      // 新数据结构：{ accounts: [...] }
-      allAccounts = accounts.accounts;
-    } else if (accounts.deposit && accounts.liability) {
-      // 旧数据结构：{ deposit: [...], liability: [...] }
-      allAccounts = [...accounts.deposit, ...accounts.liability];
-    } else {
-      // 空数据结构
-      allAccounts = [];
+    
+    // Support both structures just in case
+    if (accountsData && accountsData.accounts) {
+      allAccounts = accountsData.accounts;
+    } else if (accountsData && accountsData.deposit) {
+      allAccounts = [...(accountsData.deposit || []), ...(accountsData.liability || [])];
     }
     
-    // 为每条记录添加账户名称
-    const todayRecordsWithAccount = todayRecords.map(record => {
-      const account = allAccounts.find(acc => acc.id === record.accountId);
+    // Map account info to records
+    const enrichedRecords = todayRecords.map(record => {
+      const account = allAccounts.find(acc => acc.id == record.accountId);
       return {
         ...record,
         accountName: account ? account.name : '未知账户',
@@ -722,7 +614,7 @@ Page({
     });
     
     this.setData({
-      todayRecords: todayRecordsWithAccount
+      todayRecords: enrichedRecords
     });
   },
 
@@ -823,134 +715,54 @@ Page({
     // 验证金额
     const amount = typeof editRecord.amount === 'string' ? parseFloat(editRecord.amount) : (editRecord.amount || 0);
     if (amount <= 0) {
-      wx.showToast({
-        title: '请输入有效金额',
-        icon: 'none'
-      });
+      wx.showToast({ title: '请输入有效金额', icon: 'none' });
       return;
     }
     
     // 验证分类
     if (!editRecord.category) {
-      wx.showToast({
-        title: '请选择分类',
-        icon: 'none'
-      });
+      wx.showToast({ title: '请选择分类', icon: 'none' });
       return;
     }
     
     // 验证账户
     if (!editRecord.accountId) {
-      wx.showToast({
-        title: '请选择账户',
-        icon: 'none'
-      });
+      wx.showToast({ title: '请选择账户', icon: 'none' });
       return;
     }
+
+    // 构建完整的新记录对象
+    const fullNewRecord = {
+      ...originalRecord,
+      amount: amount,
+      type: editRecord.type,
+      category: editRecord.category,
+      subcategory: editRecord.subcategory,
+      note: editRecord.note,
+      accountId: editRecord.accountId
+    };
     
-    // 获取所有记录
+    // 获取所有记录并更新
     let records = wx.getStorageSync('records') || [];
-    
-    // 找到要编辑的记录并更新
     records = records.map(record => {
       if (record.id === editRecord.id) {
-        return {
-          ...record,
-           amount: amount,
-          type: editRecord.type,
-          category: editRecord.category,
-          subcategory: editRecord.subcategory,
-          note: editRecord.note,
-          accountId: editRecord.accountId
-        };
+        return fullNewRecord;
       }
       return record;
     });
     
-    // 保存更新后的记录
     wx.setStorageSync('records', records);
     
-    // 更新账户余额
-    // 1. 先恢复原始记录的余额
-    this.restoreOriginalBalance(originalRecord);
-    // 2. 再应用新记录的余额变化
-    this.updateAccountBalance(editRecord);
+    // 使用全局方法一次性处理余额变动 (撤销旧的，应用新的)
+    getApp().processBalanceChange(originalRecord, fullNewRecord);
     
     // 刷新今日记录
     this.loadTodayRecords();
+    getApp().refreshAllAccounts(this);
     
     // 隐藏编辑对话框
     this.hideEditRecordDialog();
     
-    wx.showToast({
-      title: '编辑成功',
-      icon: 'success'
-    });
-  },
-
-  // 恢复原始记录的余额
-  restoreOriginalBalance(record) {
-    let accounts = wx.getStorageSync('accounts') || { accounts: [] };
-    const amount = record.amount;
-    const isIncome = record.type === '收入';
-    const accountId = record.accountId;
-    
-    // 查找账户
-    let account = null;
-    let accountIndex = -1;
-    let isNewStructure = false;
-    
-    if (accounts.accounts) {
-      // 新数据结构：{ accounts: [...] }
-      isNewStructure = true;
-      accountIndex = accounts.accounts.findIndex(acc => acc.id === accountId);
-      if (accountIndex !== -1) {
-        account = accounts.accounts[accountIndex];
-      }
-    } else if (accounts.deposit && accounts.liability) {
-      // 旧数据结构：{ deposit: [...], liability: [...] }
-      let found = false;
-      Object.keys(accounts).forEach(type => {
-        if (found) return;
-        const foundAccount = accounts[type].find(acc => acc.id === accountId);
-        if (foundAccount) {
-          account = foundAccount;
-          found = true;
-        }
-      });
-    }
-    
-    if (!account) {
-      return;
-    }
-    
-     // 恢复余额（与原始更新相反）
-     let newBalance = account.balance || 0;
-    if (isIncome) {
-      // 收入：恢复时减少余额
-      newBalance -= amount;
-    } else {
-      // 支出：恢复时增加余额
-      newBalance += amount;
-    }
-    
-    // 更新账户余额
-    if (isNewStructure) {
-      // 新数据结构更新
-      accounts.accounts[accountIndex] = { ...account, balance: newBalance };
-    } else {
-      // 旧数据结构更新
-      Object.keys(accounts).forEach(type => {
-        accounts[type] = accounts[type].map(acc => {
-          if (acc.id === accountId) {
-            return { ...acc, balance: newBalance };
-          }
-          return acc;
-        });
-      });
-    }
-    
-    // 保存更新后的账户数据
-    wx.setStorageSync('accounts', accounts);
+    wx.showToast({ title: '编辑成功', icon: 'success' });
   }
 })
